@@ -10,9 +10,21 @@
 
 export type RoleId = "pm" | "designer" | "qa";
 
+export type LanguageId =
+  | "javascript"
+  | "typescript"
+  | "python"
+  | "java"
+  | "go"
+  | "rust"
+  | "csharp"
+  | "ruby"
+  | "kotlin"
+  | "php";
+
 export interface AnalyzeRequest {
   code: string;
-  language?: "javascript" | "typescript" | "python" | "java";
+  language: LanguageId;
   roles: RoleId[];
 }
 

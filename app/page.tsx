@@ -1,4 +1,6 @@
 'use client'
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import {
   Activity,
   ArrowRight,
@@ -13,8 +15,7 @@ import {
   Palette,
   Play,
   RefreshCw,
-  Sparkles,
-  Workflow,
+  Sparkles
 } from "lucide-react";
 import { useState } from "react";
 
@@ -329,23 +330,7 @@ export default function App() {
         }}
       />
 
-      <header className="border-b border-zinc-800/80 backdrop-blur-sm sticky top-0 z-10 bg-zinc-950/80">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-300 flex items-center justify-center">
-              <Workflow className="w-5 h-5 text-zinc-900" strokeWidth={2.5} />
-            </div>
-            <div>
-              <h1 className="text-base font-semibold tracking-tight">Logic Bridge</h1>
-              <p className="text-[11px] text-zinc-500 font-mono uppercase tracking-wider">code → visual → team</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>BACKEND: MOCK</span>
-          </div>
-        </div>
-      </header>
+      <Header/>
 
       <main className="max-w-7xl mx-auto px-6 py-8 relative">
         {status === "idle" && (
@@ -714,14 +699,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className="border-t border-zinc-800/60 mt-16 py-6">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between text-xs text-zinc-600 font-mono">
-          <span>LOGIC BRIDGE / v0.1.0</span>
-          <div className="flex items-center gap-4">
-            <span>Next.js · Tailwind · shadcn/ui</span>
-          </div>
-        </div>
-      </footer>
+      <Footer/>
     </div>
   );
 }
