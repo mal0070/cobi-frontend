@@ -232,31 +232,22 @@ interface ResultViewProps {
 export default function ResultView({ selectedRoles, activeTab, onTabChange, onReset, currentLangLabel }: ResultViewProps) {
   return (
     <section className="space-y-5">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
-            <span className="text-zinc-500">fn </span>
-            <span className="text-zinc-200">{MOCK_RESULT.meta.functionName}</span>
-          </div>
-          <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
-            <span className="text-zinc-500">lang </span>
-            <span className="text-zinc-200">{currentLangLabel}</span>
-          </div>
-          <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
-            <span className="text-zinc-500">branches </span>
-            <span className="text-zinc-200">{MOCK_RESULT.meta.branches}</span>
-          </div>
-          <div className="px-3 py-1.5 rounded-md bg-emerald-950/40 border border-emerald-900/60 text-xs font-mono text-emerald-400">
-            complexity: {MOCK_RESULT.meta.complexity}
-          </div>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
+          <span className="text-zinc-500">fn </span>
+          <span className="text-zinc-200">{MOCK_RESULT.meta.functionName}</span>
         </div>
-        <button
-          onClick={onReset}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900 text-xs text-zinc-400 transition-colors"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          새로 분석
-        </button>
+        <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
+          <span className="text-zinc-500">lang </span>
+          <span className="text-zinc-200">{currentLangLabel}</span>
+        </div>
+        <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
+          <span className="text-zinc-500">branches </span>
+          <span className="text-zinc-200">{MOCK_RESULT.meta.branches}</span>
+        </div>
+        <div className="px-3 py-1.5 rounded-md bg-emerald-950/40 border border-emerald-900/60 text-xs font-mono text-emerald-400">
+          complexity: {MOCK_RESULT.meta.complexity}
+        </div>
       </div>
 
       <div className="flex items-center gap-1 border-b border-zinc-800 overflow-x-auto">
@@ -456,6 +447,14 @@ export default function ResultView({ selectedRoles, activeTab, onTabChange, onRe
           </div>
         )}
       </div>
+
+      <button
+        onClick={onReset}
+        className="w-full py-4 rounded-xl border border-zinc-700 text-zinc-200 font-medium text-sm hover:border-zinc-500 hover:bg-zinc-900 hover:text-white transition-all flex items-center justify-center gap-2 group"
+      >
+        <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
+        새로 분석하기
+      </button>
     </section>
   );
 }
