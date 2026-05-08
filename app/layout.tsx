@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CoBi: Coding Bridge",
+  title: "CoBi: Code Bridge",
   description: "개발자를 위한 협업 어시스턴트",
 };
 

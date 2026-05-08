@@ -1,10 +1,12 @@
 'use client'
-import Footer from "@/components/Footer";
+ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { detectLanguage } from "@/lib/detectLanguage";
 import {
   Activity,
   ArrowRight,
   BarChart3,
+  Check,
   CheckCircle2,
   ChevronDown,
   ClipboardCheck,
@@ -15,9 +17,10 @@ import {
   Palette,
   Play,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Wand2
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ============================================================
 // Mock 데이터
@@ -65,6 +68,31 @@ const ROLES = [
     accent: "rgb(52 211 153)",
   },
 ];
+
+// ============================================================
+// 지원 언어 목록
+// ============================================================
+
+const LANGUAGES = [
+  { id: "javascript", label: "JavaScript", ext: "js", filename: "code" },
+  { id: "typescript", label: "TypeScript", ext: "ts", filename: "code" },
+  { id: "python", label: "Python", ext: "py", filename: "main" },
+  { id: "java", label: "Java", ext: "java", filename: "Main" },
+  { id: "go", label: "Go", ext: "go", filename: "main" },
+  { id: "rust", label: "Rust", ext: "rs", filename: "main" },
+  { id: "csharp", label: "C#", ext: "cs", filename: "Program" },
+  { id: "ruby", label: "Ruby", ext: "rb", filename: "main" },
+  { id: "kotlin", label: "Kotlin", ext: "kt", filename: "Main" },
+  { id: "php", label: "PHP", ext: "php", filename: "index" },
+] as const;
+
+type LanguageId = (typeof LANGUAGES)[number]["id"];
+
+// ============================================================
+// 언어 자동 감지 (휴리스틱)
+// ============================================================
+// 실제 프로젝트에서는 lib/detectLanguage.ts로 분리해 사용하세요.
+
 
 const MOCK_RESULT = {
   meta: {
@@ -295,10 +323,41 @@ type Tab = "flowchart" | "state" | "pm" | "designer" | "qa";
 
 export default function App() {
   const [code, setCode] = useState(SAMPLE_CODE);
+  const [language, setLanguage] = useState<LanguageId>("javascript");
+  const [autoDetect, setAutoDetect] = useState(true);
+  const [langOpen, setLangOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(["pm", "designer", "qa"]);
   const [status, setStatus] = useState<Status>("idle");
   const [activeTab, setActiveTab] = useState<Tab>("flowchart");
   const [codeCollapsed, setCodeCollapsed] = useState(false);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
+
+  const currentLang = LANGUAGES.find((l) => l.id === language) ?? LANGUAGES[0];
+
+  // 언어 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!langOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [langOpen]);
+
+  // 자동 언어 감지 (300ms 디바운싱)
+  // 사용자가 수동으로 언어를 선택하면 autoDetect=false가 되어 감지 멈춤
+  useEffect(() => {
+    if (!autoDetect) return;
+    const handler = setTimeout(() => {
+      const detected = detectLanguage(code);
+      if (detected && detected !== language) {
+        setLanguage(detected);
+      }
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [code, autoDetect, language]);
 
   const handleAnalyze = () => {
     if (!code.trim() || selectedRoles.length === 0) return;
@@ -330,7 +389,7 @@ export default function App() {
         }}
       />
 
-      <Header/>
+     <Header/>
 
       <main className="max-w-7xl mx-auto px-6 py-8 relative">
         {status === "idle" && (
@@ -354,30 +413,117 @@ export default function App() {
 
         <section className="mb-6">
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
-            <button
-              onClick={() => codeCollapsed && setCodeCollapsed(false)}
-              className={`w-full flex items-center justify-between px-4 py-3 border-b border-zinc-800/80 ${
-                codeCollapsed ? "hover:bg-zinc-900/60 cursor-pointer" : "cursor-default"
-              }`}
-            >
+            <div className="w-full flex items-center justify-between px-4 py-3 border-b border-zinc-800/80">
               <div className="flex items-center gap-2">
                 <Code2 className="w-4 h-4 text-zinc-500" />
-                <span className="text-sm font-medium text-zinc-300">code.js</span>
-                <span className="text-[11px] text-zinc-600 font-mono">JAVASCRIPT</span>
+                <span className="text-sm font-medium text-zinc-300">
+                  {currentLang.filename}.{currentLang.ext}
+                </span>
+
+                {/* 언어 선택 드롭다운 */}
+                <div ref={langDropdownRef} className="relative ml-1">
+                  <button
+                    onClick={() => setLangOpen((v) => !v)}
+                    disabled={status !== "idle"}
+                    className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono uppercase tracking-wider text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    aria-haspopup="listbox"
+                    aria-expanded={langOpen}
+                  >
+                    {currentLang.label}
+                    {autoDetect && (
+                      <span className="flex items-center gap-0.5 px-1 py-[1px] rounded bg-emerald-950/60 border border-emerald-900/60 text-emerald-400 text-[9px]">
+                        <Wand2 className="w-2.5 h-2.5" />
+                        AUTO
+                      </span>
+                    )}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${langOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {langOpen && (
+                    <div
+                      role="listbox"
+                      className="absolute top-full left-0 mt-1.5 w-52 rounded-lg border border-zinc-700 bg-zinc-900 shadow-2xl shadow-black/50 z-20 overflow-hidden"
+                    >
+                      {/* Auto-detect 옵션 */}
+                      <button
+                        role="option"
+                        aria-selected={autoDetect}
+                        onClick={() => {
+                          setAutoDetect(true);
+                          // 즉시 한 번 감지
+                          const detected = detectLanguage(code);
+                          if (detected) setLanguage(detected);
+                          setLangOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors border-b border-zinc-800 ${
+                          autoDetect
+                            ? "bg-emerald-950/30 text-emerald-300"
+                            : "text-zinc-300 hover:bg-zinc-800/60"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Wand2 className="w-3.5 h-3.5" />
+                          <span className="font-medium">Auto-detect</span>
+                        </span>
+                        {autoDetect && <Check className="w-3.5 h-3.5" />}
+                      </button>
+
+                      <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+                        Manual
+                      </div>
+                      <div className="max-h-64 overflow-y-auto pb-1">
+                        {LANGUAGES.map((lang) => {
+                          const selected = !autoDetect && lang.id === language;
+                          return (
+                            <button
+                              key={lang.id}
+                              role="option"
+                              aria-selected={selected}
+                              onClick={() => {
+                                setLanguage(lang.id);
+                                setAutoDetect(false);
+                                setLangOpen(false);
+                              }}
+                              className={`w-full flex items-center justify-between px-3 py-1.5 text-sm text-left transition-colors ${
+                                selected
+                                  ? "bg-zinc-800/80 text-zinc-100"
+                                  : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-zinc-600 w-7">.{lang.ext}</span>
+                                {lang.label}
+                              </span>
+                              {selected && <Check className="w-3.5 h-3.5 text-zinc-300" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Collapse 토글 (결과 화면에서만 보임) */}
               {status === "result" && (
-                <ChevronDown
-                  className={`w-4 h-4 text-zinc-500 transition-transform ${codeCollapsed ? "" : "rotate-180"}`}
-                />
+                <button
+                  onClick={() => setCodeCollapsed((v) => !v)}
+                  className="p-1 rounded hover:bg-zinc-800 transition-colors"
+                  aria-label={codeCollapsed ? "코드 펼치기" : "코드 접기"}
+                >
+                  <ChevronDown
+                    className={`w-4 h-4 text-zinc-500 transition-transform ${codeCollapsed ? "" : "rotate-180"}`}
+                  />
+                </button>
               )}
-            </button>
+            </div>
             {!codeCollapsed && (
               <textarea
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 disabled={status !== "idle"}
                 spellCheck={false}
-                className="w-full px-5 py-4 bg-transparent text-sm text-zinc-200 font-mono leading-relaxed resize-none focus:outline-none disabled:opacity-60"
+                placeholder={`${currentLang.label} 코드를 입력하세요...`}
+                className="w-full px-5 py-4 bg-transparent text-sm text-zinc-200 font-mono leading-relaxed resize-none focus:outline-none disabled:opacity-60 placeholder:text-zinc-700"
                 style={{ fontFamily: '"JetBrains Mono", ui-monospace, monospace', minHeight: "240px" }}
               />
             )}
@@ -480,6 +626,10 @@ export default function App() {
                 <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
                   <span className="text-zinc-500">fn </span>
                   <span className="text-zinc-200">{MOCK_RESULT.meta.functionName}</span>
+                </div>
+                <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
+                  <span className="text-zinc-500">lang </span>
+                  <span className="text-zinc-200">{currentLang.label}</span>
                 </div>
                 <div className="px-3 py-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
                   <span className="text-zinc-500">branches </span>
@@ -698,8 +848,7 @@ export default function App() {
           </section>
         )}
       </main>
-
-      <Footer/>
+     <Footer/>
     </div>
   );
 }
