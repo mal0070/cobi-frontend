@@ -36,6 +36,31 @@ function getCachedAnalysis(key: string): AnalyzeResponse | null {
   }
 }
 
+function collectCachedViews(req: {
+  code: string;
+  language: string;
+}): { base: AnalyzeResponse | null; roleViews: AnalyzeResponse['role_views'] } {
+  const roleViews: AnalyzeResponse['role_views'] = {};
+  let base: AnalyzeResponse | null = null;
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (!key?.startsWith('cobi_analysis_')) continue;
+      const cachedReq = JSON.parse(key.slice('cobi_analysis_'.length)) as {
+        code: string;
+        language: string;
+      };
+      if (cachedReq.code !== req.code || cachedReq.language !== req.language) continue;
+      const raw = sessionStorage.getItem(key);
+      if (!raw) continue;
+      const response = JSON.parse(raw) as AnalyzeResponse;
+      if (!base) base = response;
+      Object.assign(roleViews, response.role_views);
+    }
+  } catch {}
+  return { base, roleViews };
+}
+
 function setCachedAnalysis(key: string, result: AnalyzeResponse): void {
   try {
     sessionStorage.setItem(key, JSON.stringify(result));
@@ -98,18 +123,43 @@ export default function HomePage() {
     };
 
     const cacheKey = getAnalysisCacheKey(req);
-    const cached = getCachedAnalysis(cacheKey);
-    if (cached) {
-      navigateWithResult(cached);
+    const exactHit = getCachedAnalysis(cacheKey);
+    if (exactHit) {
+      navigateWithResult(exactHit);
+      return;
+    }
+
+    const { base, roleViews: cachedViews } = collectCachedViews(req);
+    const uncovered = req.roles.filter((r) => !cachedViews[r]);
+
+    if (uncovered.length === 0 && base) {
+      const merged = {
+        ...base,
+        role_views: Object.fromEntries(
+          req.roles.map((r) => [r, cachedViews[r]]),
+        ) as AnalyzeResponse['role_views'],
+      };
+      setCachedAnalysis(cacheKey, merged);
+      navigateWithResult(merged);
       return;
     }
 
     setStatus('loading');
     setError(null);
     try {
-      const res = await analyze(req);
-      setCachedAnalysis(cacheKey, res);
-      navigateWithResult(res);
+      const res = await analyze({ ...req, roles: uncovered.length > 0 ? uncovered : req.roles });
+      const mergedRoleViews = {
+        ...cachedViews,
+        ...res.role_views,
+      };
+      const finalResponse = {
+        ...res,
+        role_views: Object.fromEntries(
+          req.roles.map((r) => [r, mergedRoleViews[r]]),
+        ) as AnalyzeResponse['role_views'],
+      };
+      setCachedAnalysis(cacheKey, finalResponse);
+      navigateWithResult(finalResponse);
     } catch (e) {
       setStatus('error');
       setError(
