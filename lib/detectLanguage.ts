@@ -1,5 +1,7 @@
 import type { LanguageId } from "@/types/api";
 
+type DetectableLanguage = Exclude<LanguageId, "auto" | "c++" | "unknown">;
+
 /**
  * 키워드 휴리스틱 기반 언어 감지
  *
@@ -17,7 +19,7 @@ interface Pattern {
   score: number;
 }
 
-const PATTERNS: Record<LanguageId, Pattern[]> = {
+const PATTERNS: Record<DetectableLanguage, Pattern[]> = {
   // -- JavaScript --
   javascript: [
     { regex: /\bfunction\s+\w+\s*\(/g, score: 3 },

@@ -1,16 +1,27 @@
 /**
- * 백엔드 응답 타입 정의
- * - 백엔드가 LLM을 통해 코드를 분석하고 반환하는 응답 형식
- * - Mermaid 코드와 직군별로 가공된 View 데이터를 포함
+ * 백엔드 API 타입 정의 (CoBi Backend)
+ * Source: https://github.com/.../CoBi-backend
+ * Endpoint: POST /api/analyze
+ *
+ * 백엔드 Pydantic 스키마와 1:1로 매칭됩니다.
+ * 백엔드가 스키마를 변경하면 이 파일도 함께 업데이트해야 합니다.
  */
 
 // ============================================================
-// 요청 타입
+// 역할 (직군)
 // ============================================================
 
-export type RoleId = "pm" | "designer" | "qa";
+export type RoleId = "pm" | "designer" | "qa" | "cs";
 
+export const ROLE_IDS: RoleId[] = ["pm", "designer", "qa", "cs"];
+
+// ============================================================
+// 언어
+// ============================================================
+
+/** 사용자가 선택할 수 있는 언어. "auto"이면 백엔드가 감지 */
 export type LanguageId =
+  | "auto"
   | "javascript"
   | "typescript"
   | "python"
@@ -20,110 +31,102 @@ export type LanguageId =
   | "csharp"
   | "ruby"
   | "kotlin"
-  | "php";
+  | "php"
+  | "c++"
+  | "unknown";
+
+// ============================================================
+// 요청
+// ============================================================
 
 export interface AnalyzeRequest {
   code: string;
-  language: LanguageId;
-  roles: RoleId[];
+  /** "auto"이면 백엔드가 감지. 기본값 "auto" */
+  language?: LanguageId | string;
+  /** 미지정 시 백엔드가 ["pm", "designer", "qa", "cs"] 모두 생성 */
+  roles?: RoleId[];
+  /** 기본값 "detailed" */
+  output_style?: "detailed" | "brief";
 }
 
 // ============================================================
-// 공통 메타 정보
+// Logic IR
 // ============================================================
 
-export interface AnalysisMeta {
-  functionName: string;
-  branches: number;
-  complexity: "Low" | "Medium" | "High";
-  summary: string;
-  language: string;
+export interface IRState {
+  name: string;
+  initial: boolean | number | string;
+  meaning: string;
 }
 
-// ============================================================
-// 다이어그램 (Mermaid 원본 코드)
-// ============================================================
-
-export interface MermaidDiagram {
-  /** Mermaid 원본 코드 (백엔드에서 생성) */
-  code: string;
-  /** 다이어그램 타입 */
-  type: "flowchart" | "stateDiagram";
-  /** 캡션/설명 */
-  caption?: string;
+export interface IRDerivedValue {
+  name: string;
+  expression: string;
+  meaning: string;
 }
 
-// ============================================================
-// PM View - 비즈니스 로직 시나리오
-// ============================================================
-
-export interface PMScenario {
+export interface IRBranch {
   condition: string;
   result: string;
-  impact: "High" | "Medium" | "Low";
-  userMessage: string;
+  plain_meaning: string;
 }
 
-export interface PMView {
+export interface LogicIR {
+  language: string;
+  summary: string;
+  inputs: string[];
+  states: IRState[];
+  derived_values: IRDerivedValue[];
+  branches: IRBranch[];
+  edge_cases: string[];
+  uncertainties: string[];
+}
+
+// ============================================================
+// Visualization (Mermaid)
+// ============================================================
+
+export interface Diagram {
   title: string;
-  scenarios: PMScenario[];
-  metrics: {
-    totalScenarios: number;
-    blockingCases: number;
-    successRate: string;
-  };
+  type: string;
+  /** Mermaid 원본 문자열 */
+  mermaid: string;
+}
+
+export interface Visualizations {
+  flowchart: Diagram;
+  state_diagram: Diagram;
 }
 
 // ============================================================
-// Designer View - 사용자 화면 흐름
+// Role View (4가지 직군 모두 동일 구조)
 // ============================================================
 
-export interface DesignerScreen {
-  state: string;
-  condition: string;
-  ui: string;
-  message: string;
-}
-
-export interface DesignerView {
+export interface RoleView {
+  primary_visualization: string;
   title: string;
-  screens: DesignerScreen[];
+  summary: string;
+  key_points: string[];
+  questions_to_confirm: string[];
 }
 
 // ============================================================
-// QA View - 테스트 시나리오
-// ============================================================
-
-export interface QATestCase {
-  id: string;
-  title: string;
-  priority: "Critical" | "High" | "Medium" | "Low";
-  steps: string[];
-  expected: string;
-  type: "Positive" | "Negative" | "Edge" | "Boundary";
-}
-
-export interface QAView {
-  title: string;
-  testCases: QATestCase[];
-  coverage: {
-    branches: string;
-    cases: number;
-    categories: string[];
-  };
-}
-
-// ============================================================
-// 최종 응답
+// 응답
 // ============================================================
 
 export interface AnalyzeResponse {
-  meta: AnalysisMeta;
-  flowchart: MermaidDiagram;
-  stateDiagram: MermaidDiagram;
-  pmView?: PMView;
-  designerView?: DesignerView;
-  qaView?: QAView;
+  detected_language: string;
+  logic_ir: LogicIR;
+  visualizations: Visualizations;
+  /** key = RoleId ("pm" | "designer" | "qa" | "cs") */
+  role_views: Partial<Record<RoleId, RoleView>>;
+  warnings: string[];
+  /** 0.0 ~ 1.0 */
+  confidence: number;
 }
+
+// ============================================================
+// 프론트 전용 UI 상태
+// ============================================================
 
 export type AnalysisStatus = "idle" | "loading" | "success" | "error";

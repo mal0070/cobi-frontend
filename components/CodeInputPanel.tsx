@@ -19,7 +19,7 @@ export const LANGUAGES = [
 
 export type LanguageId = (typeof LANGUAGES)[number]["id"];
 
-type Status = "idle" | "loading" | "result";
+type Status = "idle" | "loading" | "success" | "error";
 
 interface CodeInputPanelProps {
   code: string;
@@ -65,7 +65,7 @@ export default function CodeInputPanel({
     const handler = setTimeout(() => {
       const detected = detectLanguage(code);
       if (detected && detected !== language) {
-        onLanguageChange(detected);
+        onLanguageChange(detected as LanguageId);
       }
     }, 300);
     return () => clearTimeout(handler);
@@ -109,7 +109,7 @@ export default function CodeInputPanel({
                     onClick={() => {
                       onAutoDetectChange(true);
                       const detected = detectLanguage(code);
-                      if (detected) onLanguageChange(detected);
+                      if (detected) onLanguageChange(detected as LanguageId);
                       setLangOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors border-b border-zinc-800 ${
@@ -161,7 +161,7 @@ export default function CodeInputPanel({
             </div>
           </div>
 
-          {status === "result" && (
+          {status === "success" && (
             <button
               onClick={() => onCollapsedChange(!codeCollapsed)}
               className="p-1 rounded hover:bg-zinc-800 transition-colors"
