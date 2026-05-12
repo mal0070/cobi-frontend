@@ -66,10 +66,20 @@ export interface IRDerivedValue {
 }
 
 export interface IRBranch {
+  /** 조건 표현식 (예: "user.isPremium && cart.total > 50000") */
   condition: string;
+  /** 조건이 참일 때의 결과/액션 */
   result: string;
+  /** 한국어로 평이하게 풀어 쓴 의미 */
   plain_meaning: string;
+  /** 조건에서 검사하는 변수/상태의 이름 (예: "사용자 ID", "주문금액") */
+  condition_var?: string;
+  /** 조건이 참일 때의 값/상태 표현 (예: "없음", "0이하") */
+  true_label?: string;
+  /** 조건이 거짓일 때의 값/상태 표현 (예: "있음", "0초과") */
+  false_label?: string;
 }
+ 
 
 export interface LogicIR {
   language: string;

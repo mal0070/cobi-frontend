@@ -139,11 +139,18 @@ export default function ResultView({ response, activeTab, onTabChange, onReset }
           />
         )}
 
-        {availableRoles.map((role) =>
+         {availableRoles.map((role) =>
           activeTab === role && role_views[role] ? (
-            <RoleView key={role} data={role_views[role]!} role={role} />
+            <RoleView
+              key={role}
+              data={role_views[role]!}
+              role={role}
+              logicIR={logic_ir}
+              storageKey={detected_language}
+            />
           ) : null
         )}
+ 
       </div>
 
       {/* 새로 분석 버튼 */}
