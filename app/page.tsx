@@ -6,10 +6,12 @@ import { IdleActions, IdleHero } from "@/components/views/IdleView";
 import LoadingView from "@/components/views/LoadingView";
 import ResultView, { Tab } from "@/components/views/ResultView";
 import { analyze, AnalyzeError } from "@/lib/api";
+import { detectLanguage } from "@/lib/detectLanguage";
 import { SAMPLE_CODE } from "@/lib/mockData";
+import { validateCode } from "@/lib/validateCode";
 import type { AnalysisStatus, AnalyzeResponse, LanguageId, RoleId } from "@/types/api";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function getAnalysisCacheKey(req: { code: string; language: string; roles: RoleId[] }): string {
   return "cobi_analysis_" + JSON.stringify({ ...req, roles: [...req.roles].sort() });
@@ -43,9 +45,23 @@ export default function App() {
   const [response, setResponse] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [analyzedCode, setAnalyzedCode] = useState(SAMPLE_CODE);
+  const [inputError, setInputError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!inputError) return;
+    const t = setTimeout(() => setInputError(null), 3000);
+    return () => clearTimeout(t);
+  }, [inputError]);
 
   const handleAnalyze = async () => {
     if (!code.trim() || selectedRoles.length === 0) return;
+
+    const effectiveLang = autoDetect ? detectLanguage(code) : language;
+    const validationErr = validateCode(code, effectiveLang);
+    if (validationErr) {
+      setInputError(validationErr);
+      return;
+    }
 
     const req = {
       code,
@@ -124,6 +140,13 @@ export default function App() {
           codeCollapsed={codeCollapsed}
           onCollapsedChange={setCodeCollapsed}
         />
+
+        {inputError && (
+          <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-lg border border-red-900/60 bg-red-950/30 text-sm text-red-300">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+            {inputError}
+          </div>
+        )}
 
         {status === "idle" && (
           <IdleActions
