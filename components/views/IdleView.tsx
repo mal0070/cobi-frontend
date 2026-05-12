@@ -6,8 +6,7 @@ import {
   ClipboardCheck,
   Headphones,
   Palette,
-  Play,
-  Sparkles,
+  Play
 } from "lucide-react";
 
 export const ROLES: Array<{
@@ -54,21 +53,46 @@ export const ROLES: Array<{
 
 export function IdleHero() {
   return (
-    <div className="mb-10">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs text-zinc-400 font-mono mb-5">
-        <Sparkles className="w-3 h-3" />
-        <span>AI-POWERED COLLABORATION</span>
+    <div className="relative mb-10 flex flex-col items-center overflow-hidden py-8">
+      {/* 흘러가는 배경 텍스트 */}
+      <div
+        className="absolute inset-0 flex opacity-20 pointer-events-none select-none"
+        aria-hidden="true"
+      >
+        <div
+          className="flex whitespace-nowrap"
+          style={{ animation: "marquee 22s linear infinite" }}
+        >
+          {[0, 1].map((i) => (
+            <span key={i} className="text-7xl font-bold tracking-tighter">
+              {[0, 1, 2, 3].map((j) => (
+                <span key={j}>
+                  <span className="text-zinc-300">Co</span>
+                  <span className="text-zinc-600">de&nbsp;</span>
+                  <span className="text-zinc-300">B</span>
+                   <span className="text-zinc-600">r&nbsp;</span>
+                  <span className="text-zinc-300">i</span>
+                  <span className="text-zinc-600">dge&nbsp;·&nbsp;</span>
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
       </div>
-      <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3 leading-tight">
-        코드를 붙여넣고,
-        <br />
-        <span className="text-zinc-400">팀원의 언어로 번역하세요.</span>
-      </h2>
-      <p className="text-zinc-500 max-w-xl text-sm leading-relaxed">
-        조건 분기와 로직을 PM, 디자이너, QA, CS가 빠르게 이해할 수 있는
-        <br className="hidden md:block" />
-        플로우차트와 직군별 시나리오로 자동 변환합니다.
-      </p>
+
+      {/* 전경 텍스트 */}
+      <div className="relative z-10 text-center">
+        <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3 leading-tight">
+          코드를 붙여넣고,
+          <br />
+          <span className="text-emerald-200">팀원의 언어로 번역하세요.</span>
+        </h2>
+        <p className="text-zinc-500 max-w-xl text-sm leading-relaxed">
+          조건 분기와 로직을 PM, 디자이너, QA, CS가 빠르게 이해할 수 있는
+          <br className="hidden md:block" />
+          플로우차트와 직군별 시나리오로 자동 변환합니다.
+        </p>
+      </div>
     </div>
   );
 }
