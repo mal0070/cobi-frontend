@@ -7,14 +7,18 @@ import type { AnalyzeResponse } from "@/types/api";
 
 export default function ResultPage() {
   const router = useRouter();
-  const [response] = useState<AnalyzeResponse | null>(
-    () => loadLatestResult()?.response ?? null
-  );
+  const [response, setResponse] = useState<AnalyzeResponse | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("flowchart");
 
   useEffect(() => {
-    if (!response) router.replace("/");
-  }, [response, router]);
+    const latest = loadLatestResult();
+    if (!latest) {
+      router.replace("/");
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setResponse(latest.response);
+  }, [router]);
 
   if (!response) return null;
 

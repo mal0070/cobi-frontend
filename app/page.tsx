@@ -34,7 +34,13 @@ function setCachedAnalysis(key: string, result: AnalyzeResponse): void {
 export default function HomePage() {
   const router = useRouter();
 
-  const [code, setCode] = useState(() => loadLatestResult()?.code ?? SAMPLE_CODE);
+  const [code, setCode] = useState(SAMPLE_CODE);
+
+  useEffect(() => {
+    const stored = loadLatestResult()?.code;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored) setCode(stored);
+  }, []);
   const [language, setLanguage] = useState<LanguageId>("auto");
   const [autoDetect, setAutoDetect] = useState(true);
   const [selectedRoles, setSelectedRoles] = useState<RoleId[]>(["pm", "designer", "qa", "cs"]);
