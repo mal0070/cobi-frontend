@@ -134,7 +134,7 @@ export function IdleActions({ code, selectedRoles, onToggleRole, onAnalyze }: Id
 
       <button
         onClick={onAnalyze}
-        disabled={!code.trim() || selectedRoles.length === 0}
+        disabled={!code.trim()}
         className="w-full py-4 rounded-xl bg-zinc-100 text-zinc-900 font-medium text-sm hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group"
       >
         <Play className="w-4 h-4" fill="currentColor" />

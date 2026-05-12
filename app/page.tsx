@@ -54,7 +54,12 @@ export default function App() {
   }, [inputError]);
 
   const handleAnalyze = async () => {
-    if (!code.trim() || selectedRoles.length === 0) return;
+    if (!code.trim()) return;
+
+    if (selectedRoles.length === 0) {
+      setInputError("직군을 선택해주세요");
+      return;
+    }
 
     const effectiveLang = autoDetect ? detectLanguage(code) : language;
     const validationErr = validateCode(code, effectiveLang);
