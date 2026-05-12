@@ -1,23 +1,22 @@
 'use client'
 
 import { detectLanguage } from "@/lib/detectLanguage";
+import type { LanguageId } from "@/types/api";
 import { Check, ChevronDown, Code2, Wand2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export const LANGUAGES = [
-  { id: "javascript", label: "JavaScript", ext: "js", filename: "code" },
-  { id: "typescript", label: "TypeScript", ext: "ts", filename: "code" },
-  { id: "python", label: "Python", ext: "py", filename: "main" },
-  { id: "java", label: "Java", ext: "java", filename: "Main" },
-  { id: "go", label: "Go", ext: "go", filename: "main" },
-  { id: "rust", label: "Rust", ext: "rs", filename: "main" },
-  { id: "csharp", label: "C#", ext: "cs", filename: "Program" },
-  { id: "ruby", label: "Ruby", ext: "rb", filename: "main" },
-  { id: "kotlin", label: "Kotlin", ext: "kt", filename: "Main" },
-  { id: "php", label: "PHP", ext: "php", filename: "index" },
+const LANGUAGES = [
+  { id: "javascript" as const, label: "JavaScript", ext: "js",   filename: "code"    },
+  { id: "typescript" as const, label: "TypeScript", ext: "ts",   filename: "code"    },
+  { id: "python"     as const, label: "Python",     ext: "py",   filename: "main"    },
+  { id: "java"       as const, label: "Java",       ext: "java", filename: "Main"    },
+  { id: "go"         as const, label: "Go",         ext: "go",   filename: "main"    },
+  { id: "rust"       as const, label: "Rust",       ext: "rs",   filename: "main"    },
+  { id: "csharp"     as const, label: "C#",         ext: "cs",   filename: "Program" },
+  { id: "ruby"       as const, label: "Ruby",       ext: "rb",   filename: "main"    },
+  { id: "kotlin"     as const, label: "Kotlin",     ext: "kt",   filename: "Main"    },
+  { id: "php"        as const, label: "PHP",        ext: "php",  filename: "index"   },
 ] as const;
-
-export type LanguageId = (typeof LANGUAGES)[number]["id"];
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -47,7 +46,10 @@ export default function CodeInputPanel({
   const [langOpen, setLangOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentLang = LANGUAGES.find((l) => l.id === language) ?? LANGUAGES[0];
+  const currentLang =
+    language === "auto"
+      ? { label: "Auto", ext: "js", filename: "code" }
+      : LANGUAGES.find((l) => l.id === language) ?? LANGUAGES[0];
 
   useEffect(() => {
     if (!langOpen) return;
@@ -64,9 +66,8 @@ export default function CodeInputPanel({
     if (!autoDetect) return;
     const handler = setTimeout(() => {
       const detected = detectLanguage(code);
-      if (detected && detected !== language) {
-        onLanguageChange(detected as LanguageId);
-      }
+      const next: LanguageId = detected ?? "auto";
+      if (next !== language) onLanguageChange(next);
     }, 300);
     return () => clearTimeout(handler);
   }, [code, autoDetect, language, onLanguageChange]);
@@ -84,7 +85,7 @@ export default function CodeInputPanel({
             <div ref={langDropdownRef} className="relative ml-1">
               <button
                 onClick={() => setLangOpen((v) => !v)}
-                disabled={status !== "idle"}
+                disabled={status === "loading"}
                 className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono uppercase tracking-wider text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 aria-haspopup="listbox"
                 aria-expanded={langOpen}
@@ -109,7 +110,7 @@ export default function CodeInputPanel({
                     onClick={() => {
                       onAutoDetectChange(true);
                       const detected = detectLanguage(code);
-                      if (detected) onLanguageChange(detected as LanguageId);
+                      onLanguageChange(detected ?? "auto");
                       setLangOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors border-b border-zinc-800 ${
@@ -161,7 +162,7 @@ export default function CodeInputPanel({
             </div>
           </div>
 
-          {status === "success" && (
+          {(status === "success" || status === "error") && (
             <button
               onClick={() => onCollapsedChange(!codeCollapsed)}
               className="p-1 rounded hover:bg-zinc-800 transition-colors"
@@ -179,7 +180,7 @@ export default function CodeInputPanel({
             onChange={(e) => onCodeChange(e.target.value)}
             disabled={status !== "idle"}
             spellCheck={false}
-            placeholder={`${currentLang.label} 코드를 입력하세요...`}
+            placeholder="여기에 코드를 붙여넣으세요..."
             className="w-full px-5 py-4 bg-transparent text-sm text-zinc-200 font-mono leading-relaxed resize-none focus:outline-none disabled:opacity-60 placeholder:text-zinc-700"
             style={{ fontFamily: '"JetBrains Mono", ui-monospace, monospace', minHeight: "240px" }}
           />

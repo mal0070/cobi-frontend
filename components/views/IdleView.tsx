@@ -1,19 +1,28 @@
+import type { RoleId } from "@/types/api";
 import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
   ClipboardCheck,
+  Headphones,
   Palette,
   Play,
   Sparkles,
 } from "lucide-react";
 
-export const ROLES = [
+export const ROLES: Array<{
+  id: RoleId;
+  label: string;
+  subtitle: string;
+  desc: string;
+  icon: typeof BarChart3;
+  accent: string;
+}> = [
   {
     id: "pm",
     label: "PM",
     subtitle: "제품 매니저",
-    desc: "비즈니스 시나리오",
+    desc: "비즈니스 정책",
     icon: BarChart3,
     accent: "rgb(96 165 250)",
   },
@@ -21,7 +30,7 @@ export const ROLES = [
     id: "designer",
     label: "Designer",
     subtitle: "디자이너",
-    desc: "사용자 화면 흐름",
+    desc: "사용자 경험",
     icon: Palette,
     accent: "rgb(244 114 182)",
   },
@@ -32,6 +41,14 @@ export const ROLES = [
     desc: "테스트 케이스",
     icon: ClipboardCheck,
     accent: "rgb(52 211 153)",
+  },
+  {
+    id: "cs",
+    label: "CS",
+    subtitle: "고객 지원",
+    desc: "고객 안내",
+    icon: Headphones,
+    accent: "rgb(251 146 60)",
   },
 ];
 
@@ -48,7 +65,7 @@ export function IdleHero() {
         <span className="text-zinc-400">팀원의 언어로 번역하세요.</span>
       </h2>
       <p className="text-zinc-500 max-w-xl text-sm leading-relaxed">
-        조건 분기와 로직을 PM, 디자이너, QA가 빠르게 이해할 수 있는
+        조건 분기와 로직을 PM, 디자이너, QA, CS가 빠르게 이해할 수 있는
         <br className="hidden md:block" />
         플로우차트와 직군별 시나리오로 자동 변환합니다.
       </p>
@@ -58,8 +75,8 @@ export function IdleHero() {
 
 interface IdleActionsProps {
   code: string;
-  selectedRoles: string[];
-  onToggleRole: (id: string) => void;
+  selectedRoles: RoleId[];
+  onToggleRole: (id: RoleId) => void;
   onAnalyze: () => void;
 }
 
@@ -71,9 +88,9 @@ export function IdleActions({ code, selectedRoles, onToggleRole, onAnalyze }: Id
           <h3 className="text-xs font-mono uppercase tracking-wider text-zinc-500">
             분석할 직군 선택
           </h3>
-          <span className="text-xs text-zinc-600">{selectedRoles.length}/3 선택됨</span>
+          <span className="text-xs text-zinc-600">{selectedRoles.length}/4 선택됨</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {ROLES.map((role) => {
             const Icon = role.icon;
             const isSelected = selectedRoles.includes(role.id);
@@ -98,10 +115,10 @@ export function IdleActions({ code, selectedRoles, onToggleRole, onAnalyze }: Id
                   >
                     <Icon className="w-[18px] h-[18px]" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-baseline gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
                       <span className="text-sm font-semibold text-zinc-100">{role.label}</span>
-                      <span className="text-xs text-zinc-500">{role.subtitle}</span>
+                      <span className="text-[11px] text-zinc-500">{role.subtitle}</span>
                     </div>
                     <p className="text-xs text-zinc-500 mt-0.5">{role.desc}</p>
                   </div>

@@ -1,39 +1,23 @@
 'use client'
-import CodeInputPanel, { LanguageId } from "@/components/CodeInputPanel";
+import CodeInputPanel from "@/components/CodeInputPanel";
 import Footer from "@/components/common/Footer";
 import Header from "@/components/common/Header";
 import { IdleActions, IdleHero } from "@/components/views/IdleView";
 import LoadingView from "@/components/views/LoadingView";
 import ResultView, { Tab } from "@/components/views/ResultView";
 import { analyze, AnalyzeError } from "@/lib/api";
-import type { AnalyzeResponse, RoleId } from "@/types/api";
+import { SAMPLE_CODE } from "@/lib/mockData";
+import type { AnalysisStatus, AnalyzeResponse, LanguageId, RoleId } from "@/types/api";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
-
-const SAMPLE_CODE = `function processOrder(order) {
-  if (!order.userId) {
-    return { status: 'error', message: 'Login required' };
-  }
-
-  if (order.amount <= 0) {
-    return { status: 'error', message: 'Invalid amount' };
-  }
-
-  if (order.amount > 1000000) {
-    return { status: 'pending', message: 'Approval required' };
-  }
-
-  return { status: 'success', message: 'Order processed' };
-}`;
-
-type Status = "idle" | "loading" | "success" | "error";
 
 export default function App() {
   const [code, setCode] = useState(SAMPLE_CODE);
-  const [language, setLanguage] = useState<LanguageId>("javascript");
+  const [language, setLanguage] = useState<LanguageId>("auto");
   const [autoDetect, setAutoDetect] = useState(true);
-  const [selectedRoles, setSelectedRoles] = useState<string[]>(["pm", "designer", "qa"]);
-  const [status, setStatus] = useState<Status>("idle");
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [selectedRoles, setSelectedRoles] = useState<RoleId[]>(["pm", "designer", "qa", "cs"]);
+  const [status, setStatus] = useState<AnalysisStatus>("idle");
+  const [activeTab, setActiveTab] = useState<Tab>("flowchart");
   const [codeCollapsed, setCodeCollapsed] = useState(false);
   const [response, setResponse] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,16 +30,20 @@ export default function App() {
       const res = await analyze({
         code,
         language: autoDetect ? "auto" : language,
-        roles: selectedRoles as RoleId[],
+        roles: selectedRoles,
         output_style: "detailed",
       });
       setResponse(res);
       setStatus("success");
-      setActiveTab("overview");
+      setActiveTab("flowchart");
       setCodeCollapsed(true);
     } catch (e) {
       setStatus("error");
-      setError(e instanceof AnalyzeError ? e.message : "분석 중 오류가 발생했습니다.");
+      setError(
+        e instanceof AnalyzeError ? e.message :
+        e instanceof Error ? e.message :
+        "알 수 없는 오류가 발생했습니다."
+      );
     }
   };
 
@@ -66,7 +54,7 @@ export default function App() {
     setCodeCollapsed(false);
   };
 
-  const toggleRole = (id: string) => {
+  const toggleRole = (id: RoleId) => {
     setSelectedRoles((prev) => prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]);
   };
 
@@ -110,15 +98,7 @@ export default function App() {
         {status === "loading" && <LoadingView />}
 
         {status === "error" && (
-          <div className="mt-6 rounded-xl border border-red-900/60 bg-red-950/20 p-6 space-y-4">
-            <p className="text-sm text-red-400 font-mono">{error}</p>
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-300 text-sm hover:border-zinc-500 hover:text-white transition-colors"
-            >
-              다시 시도하기
-            </button>
-          </div>
+          <ErrorState message={error ?? "알 수 없는 오류"} onRetry={handleReset} />
         )}
 
         {status === "success" && response && (
@@ -133,5 +113,28 @@ export default function App() {
 
       <Footer />
     </div>
+  );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <section className="py-16">
+      <div className="flex flex-col items-center justify-center gap-5 max-w-md mx-auto">
+        <div className="w-14 h-14 rounded-full bg-red-950/40 border border-red-900/60 flex items-center justify-center">
+          <AlertTriangle className="w-7 h-7 text-red-400" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium text-zinc-200 mb-2">분석에 실패했어요</p>
+          <p className="text-xs text-zinc-500 font-mono break-all">{message}</p>
+        </div>
+        <button
+          onClick={onRetry}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-md border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-900 text-sm text-zinc-300 transition-colors"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          다시 시도
+        </button>
+      </div>
+    </section>
   );
 }

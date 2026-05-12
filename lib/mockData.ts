@@ -9,139 +9,178 @@
 
 import type { AnalyzeResponse } from "@/types/api";
 
-export const SAMPLE_CODE = `def apply_discount(user, cart):
-    if user.isPremium and cart.total > 50000:
-        return 0.2
-    return 0`;
+export const SAMPLE_CODE = `function processOrder(order) {
+  if (!order.userId) {
+    return { status: 'error', message: 'Login required' };
+  }
+
+  if (order.amount <= 0) {
+    return { status: 'error', message: 'Invalid amount' };
+  }
+
+  if (order.amount > 1000000) {
+    return { status: 'pending', message: 'Approval required' };
+  }
+
+  return { status: 'success', message: 'Order processed' };
+}`;
 
 export const MOCK_RESPONSE: AnalyzeResponse = {
-  detected_language: "python",
+  detected_language: "javascript",
   logic_ir: {
-    language: "python",
+    language: "javascript",
     summary:
-      "사용자가 프리미엄 회원이고 장바구니 총액이 50000을 초과할 경우 20%의 할인을 적용하고, 그렇지 않으면 할인을 적용하지 않는 로직이다.",
-    inputs: ["cart.total", "user.isPremium"],
+      "주문 처리 함수로, 사용자 인증 여부 → 금액 유효성 → 금액 한도를 순차적으로 검증하여 오류·보류·성공 상태를 반환한다.",
+    inputs: ["order.userId", "order.amount"],
     states: [],
     derived_values: [
       {
-        name: "discount",
-        expression: "0.2 if user.isPremium and cart.total > 50000 else 0",
-        meaning: "적용할 할인율",
+        name: "status",
+        expression: "'error' | 'pending' | 'success'",
+        meaning: "주문 처리 결과 상태",
       },
       {
-        name: "is_discount_applicable",
-        expression: "user.isPremium and cart.total > 50000",
-        meaning: "할인이 적용 가능한지 여부",
+        name: "message",
+        expression: "'Login required' | 'Invalid amount' | 'Approval required' | 'Order processed'",
+        meaning: "상태에 대한 설명 메시지",
       },
     ],
     branches: [
       {
-        condition: "user.isPremium and cart.total > 50000",
-        result: "discount = 0.2",
-        plain_meaning: "사용자가 프리미엄 회원이고 장바구니 총액이 50000을 초과하면 20% 할인 적용",
+        condition: "!order.userId",
+        result: "{ status: 'error', message: 'Login required' }",
+        plain_meaning: "userId가 없으면 로그인 필요 오류 반환",
       },
       {
-        condition: "not (user.isPremium and cart.total > 50000)",
-        result: "discount = 0",
-        plain_meaning: "그렇지 않으면 할인 적용 안 함",
+        condition: "order.amount <= 0",
+        result: "{ status: 'error', message: 'Invalid amount' }",
+        plain_meaning: "금액이 0 이하이면 유효하지 않은 금액 오류 반환",
+      },
+      {
+        condition: "order.amount > 1000000",
+        result: "{ status: 'pending', message: 'Approval required' }",
+        plain_meaning: "금액이 100만 초과이면 승인 대기 상태 반환",
+      },
+      {
+        condition: "그 외",
+        result: "{ status: 'success', message: 'Order processed' }",
+        plain_meaning: "모든 조건 통과 시 주문 처리 성공 반환",
       },
     ],
-    edge_cases: ["user.isPremium이 False일 때", "cart.total이 50000 이하일 때"],
+    edge_cases: [
+      "order.userId가 falsy(null, undefined, 0, '')인 모든 경우",
+      "order.amount가 정확히 0인 경우",
+      "order.amount가 정확히 1000000인 경우 (한도 미초과로 success 처리됨)",
+    ],
     uncertainties: [],
   },
   visualizations: {
     flowchart: {
-      title: "조건 분기 흐름도",
+      title: "주문 처리 분기 흐름도",
       type: "flowchart",
       mermaid: `flowchart TD
 START([START])
-C0{user.isPremium and cart.total > 50000}
-R0[discount = 0.2]
+C0{"!order.userId"}
+R0["status: 'error'\\nLogin required"]
+C1{"order.amount <= 0"}
+R1["status: 'error'\\nInvalid amount"]
+C2{"order.amount > 1000000"}
+R2["status: 'pending'\\nApproval required"]
+R3["status: 'success'\\nOrder processed"]
+END([END])
 START --> C0
 C0 -->|True| R0
-C1{not (user.isPremium and cart.total > 50000)}
-R1[discount = 0]
-R0 --> C1
+C0 -->|False| C1
 C1 -->|True| R1
-END([END])
-R1 --> END`,
+C1 -->|False| C2
+C2 -->|True| R2
+C2 -->|False| R3
+R0 --> END
+R1 --> END
+R2 --> END
+R3 --> END`,
     },
     state_diagram: {
-      title: "UI 상태 전이도",
+      title: "주문 상태 전이도",
       type: "stateDiagram",
       mermaid: `stateDiagram-v2
-[*] --> Idle`,
+[*] --> Error : userId 없음
+[*] --> Error : amount ≤ 0
+[*] --> Pending : amount > 1000000
+[*] --> Success : 정상 주문
+Error --> [*]
+Pending --> [*]
+Success --> [*]`,
     },
   },
   role_views: {
     pm: {
       primary_visualization: "flowchart",
-      title: "프리미엄 회원 할인 정책",
-      summary: "프리미엄 회원이 장바구니 총액 50000원을 초과할 경우 20% 할인이 적용되는 로직.",
+      title: "주문 처리 정책",
+      summary: "주문 시 로그인 여부·금액 유효성·100만 원 한도를 순서대로 검증하여 오류, 승인 대기, 성공 중 하나를 반환하는 로직.",
       key_points: [
-        "사용자가 프리미엄 회원인 경우에만 할인 적용 가능.",
-        "장바구니 총액이 50000원을 초과해야 20% 할인 적용.",
-        "프리미엄 회원이 아니거나 장바구니 총액이 50000원 이하일 경우 할인 없음.",
-        "할인율은 20%로 고정되어 있으며, 조건이 충족되지 않으면 0%로 설정.",
+        "비로그인 사용자는 주문을 처리할 수 없음.",
+        "주문 금액은 반드시 0보다 커야 함.",
+        "100만 원 초과 주문은 자동 승인 대기 상태로 전환됨.",
+        "세 조건을 모두 통과해야 최종 성공 처리됨.",
       ],
       questions_to_confirm: [
-        "현재 사용자가 프리미엄 회원인지 확인했는가?",
-        "장바구니 총액이 50000원을 초과하는지 확인했는가?",
-        "할인 적용 여부를 결정하기 위한 조건을 정확히 이해하고 있는가?",
+        "100만 원 한도는 비즈니스 정책으로 확정된 값인가?",
+        "승인 대기(pending) 상태의 주문은 누가 어떤 프로세스로 처리하는가?",
+        "로그인 여부 외에 추가 인증(권한, 계정 상태 등)이 필요한가?",
       ],
     },
     designer: {
       primary_visualization: "flowchart",
-      title: "프리미엄 회원 할인 적용 로직",
-      summary: "프리미엄 회원이면서 장바구니 총액이 50000을 초과할 경우 20% 할인이 적용된다.",
+      title: "주문 처리 결과 UI",
+      summary: "주문 결과는 error·pending·success 세 가지 상태로 나뉘며, 각각 다른 메시지와 UI 처리가 필요하다.",
       key_points: [
-        "사용자가 프리미엄 회원인지 여부 확인",
-        "장바구니 총액이 50000을 초과하는지 확인",
-        "할인 적용 여부에 따라 UI에서 할인 금액 표시",
-        "할인이 적용되지 않을 경우 할인 금액이 0으로 표시",
+        "오류(error) 상태: 인라인 에러 메시지 또는 토스트로 사용자에게 안내.",
+        "승인 대기(pending) 상태: 별도 대기 화면 또는 진행 표시기 필요.",
+        "성공(success) 상태: 주문 완료 확인 화면으로 이동.",
+        "각 상태에 대응하는 CTA(버튼/링크)가 명확히 구분되어야 함.",
       ],
       questions_to_confirm: [
-        "사용자가 프리미엄 회원인지 어떻게 확인할 수 있는가?",
-        "장바구니 총액이 50000을 초과하는 경우 UI에서 어떻게 표시되는가?",
-        "할인 적용 여부에 따라 사용자에게 어떤 메시지를 보여줄 것인가?",
+        "pending 상태일 때 사용자에게 예상 처리 시간을 안내해야 하는가?",
+        "error 메시지를 그대로 노출할지, 번역·가공할지 정해졌는가?",
+        "성공 후 이동할 화면(주문 내역 등)이 설계되어 있는가?",
       ],
     },
     qa: {
       primary_visualization: "flowchart",
-      title: "프리미엄 회원 할인 적용 로직",
-      summary:
-        "프리미엄 회원이면서 장바구니 총액이 50000을 초과할 경우에만 20% 할인이 적용되는 로직입니다.",
+      title: "주문 처리 로직 테스트",
+      summary: "userId 유무, amount 경계값(0, 1000000), 초과값에 대한 분기를 각각 검증해야 하는 로직.",
       key_points: [
-        "프리미엄 회원 여부(user.isPremium) 확인",
-        "장바구니 총액(cart.total) 확인",
-        "할인율(discount) 계산 로직",
-        "경계값 및 예외 케이스 처리",
+        "userId falsy 케이스: null, undefined, 빈 문자열, 0 등 모두 테스트.",
+        "amount 경계값: 0(error), 1(success), 1000000(success), 1000001(pending) 확인.",
+        "정상 케이스: userId 존재 + 0 < amount ≤ 1000000 → success.",
+        "반환 객체의 status·message 필드 값이 정확한지 검증.",
       ],
       questions_to_confirm: [
-        "사용자가 프리미엄 회원인지 확인했는가?",
-        "장바구니 총액이 50000을 초과하는지 확인했는가?",
-        "user.isPremium이 False일 때의 할인 적용 로직은 어떻게 되는가?",
-        "cart.total이 50000 이하일 때의 할인 적용 로직은 어떻게 되는가?",
+        "order.amount에 음수, 소수, 문자열이 들어오는 케이스도 처리해야 하는가?",
+        "order 객체 자체가 null/undefined인 경우 방어 처리가 있는가?",
+        "pending 상태로 넘어간 주문의 후속 처리 시나리오도 테스트 범위에 포함되는가?",
       ],
     },
     cs: {
       primary_visualization: "flowchart",
-      title: "프리미엄 회원 할인 적용 로직",
-      summary: "프리미엄 회원이 장바구니 총액이 50000원을 초과할 경우 20% 할인이 적용됩니다.",
+      title: "주문 처리 안내",
+      summary: "주문은 로그인 상태, 금액 유효성, 금액 한도에 따라 처리 결과가 달라집니다.",
       key_points: [
-        "프리미엄 회원만 할인 혜택을 받을 수 있습니다.",
-        "장바구니의 총 금액이 50000원을 초과해야 할인이 적용됩니다.",
-        "조건을 만족하지 않으면 할인 혜택이 없습니다.",
+        "로그인하지 않은 상태에서는 주문이 접수되지 않습니다.",
+        "주문 금액은 0원보다 커야 합니다.",
+        "100만 원을 초과하는 주문은 내부 승인 후 처리됩니다.",
+        "정상 조건을 충족하면 즉시 주문이 완료됩니다.",
       ],
       questions_to_confirm: [
-        "고객님이 프리미엄 회원이신가요?",
-        "장바구니에 담긴 상품의 총 금액이 50000원을 초과하나요?",
-        "할인 혜택에 대해 더 궁금한 점이 있으신가요?",
+        "고객님, 현재 로그인된 상태로 주문을 시도하셨나요?",
+        "입력하신 주문 금액이 올바른지 확인해 주시겠어요?",
+        "100만 원 초과 주문의 경우 승인 처리 기간이 얼마나 걸리는지 안내가 필요하신가요?",
       ],
     },
   },
-  warnings: ["상태 정보가 없어 기본 다이어그램으로 대체되었습니다."],
-  confidence: 0.9,
+  warnings: [],
+  confidence: 0.95,
 };
 
 /** 백엔드 호출을 모방. 1.5초 후 mock 응답 반환 */
