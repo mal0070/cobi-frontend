@@ -36,10 +36,10 @@ function getCachedAnalysis(key: string): AnalyzeResponse | null {
   }
 }
 
-function collectCachedViews(req: {
-  code: string;
-  language: string;
-}): { base: AnalyzeResponse | null; roleViews: AnalyzeResponse['role_views'] } {
+function collectCachedViews(req: { code: string; language: string }): {
+  base: AnalyzeResponse | null;
+  roleViews: AnalyzeResponse['role_views'];
+} {
   const roleViews: AnalyzeResponse['role_views'] = {};
   let base: AnalyzeResponse | null = null;
   try {
@@ -50,7 +50,8 @@ function collectCachedViews(req: {
         code: string;
         language: string;
       };
-      if (cachedReq.code !== req.code || cachedReq.language !== req.language) continue;
+      if (cachedReq.code !== req.code || cachedReq.language !== req.language)
+        continue;
       const raw = sessionStorage.getItem(key);
       if (!raw) continue;
       const response = JSON.parse(raw) as AnalyzeResponse;
@@ -147,7 +148,10 @@ export default function HomePage() {
     setStatus('loading');
     setError(null);
     try {
-      const res = await analyze({ ...req, roles: uncovered.length > 0 ? uncovered : req.roles });
+      const res = await analyze({
+        ...req,
+        roles: uncovered.length > 0 ? uncovered : req.roles,
+      });
       const mergedRoleViews = {
         ...cachedViews,
         ...res.role_views,
@@ -185,7 +189,7 @@ export default function HomePage() {
 
   return (
     <main className="max-w-7xl mx-auto py-8 relative">
-      <div className='w-4xl'>
+      <div className="w-4xl">
         {status === 'idle' && <IdleHero />}
 
         <CodeInputPanel

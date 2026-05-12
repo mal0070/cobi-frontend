@@ -29,7 +29,7 @@ export default function ResultPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-8 relative">
-      <div className='w-4xl'>
+      <div className="w-4xl">
         <CodeInputPanel
           code={code}
           onCodeChange={() => {}}

@@ -1,7 +1,8 @@
-import type { LogicIR, RoleId, RoleView as RoleViewType } from "@/types/api";
-import { CheckCircle2, HelpCircle } from "lucide-react";
-import { PmView } from "./role/PmView";
-import { QaView } from "./role/QaView";
+import type { LogicIR, RoleId, RoleView as RoleViewType } from '@/types/api';
+import { CheckCircle2, HelpCircle } from 'lucide-react';
+import { DesignerView } from './role/DesignerView';
+import { PmView } from './role/PmView';
+import { QaView } from './role/QaView';
 
 interface Props {
   data: RoleViewType;
@@ -13,10 +14,10 @@ interface Props {
 }
 
 const ROLE_ACCENT: Record<RoleId, string> = {
-  pm: "rgb(96 165 250)",
-  designer: "rgb(244 114 182)",
-  qa: "rgb(52 211 153)",
-  cs: "rgb(251 146 60)",
+  pm: 'rgb(96 165 250)',
+  designer: 'rgb(244 114 182)',
+  qa: 'rgb(52 211 153)',
+  cs: 'rgb(251 146 60)',
 };
 
 /**
@@ -30,7 +31,7 @@ const ROLE_ACCENT: Record<RoleId, string> = {
  */
 export function RoleView({ data, role, logicIR, storageKey }: Props) {
   // QA: 인터랙티브 체크리스트
-  if (role === "qa") {
+  if (role === 'qa') {
     return (
       <QaView
         key={storageKey}
@@ -42,7 +43,7 @@ export function RoleView({ data, role, logicIR, storageKey }: Props) {
   }
 
   // PM: 정책 매트릭스 + 검증
-  if (role === "pm") {
+  if (role === 'pm') {
     return (
       <PmView
         key={storageKey}
@@ -53,7 +54,19 @@ export function RoleView({ data, role, logicIR, storageKey }: Props) {
     );
   }
 
-  // Designer / CS: 추후 전용 컴포넌트로 교체 예정
+  // Designer: 상태 카드 갤러리
+  if (role === 'designer') {
+    return (
+      <DesignerView
+        key={storageKey}
+        data={data}
+        logicIR={logicIR}
+        storageKey={storageKey}
+      />
+    );
+  }
+
+  // CS: 추후 전용 컴포넌트로 교체 예정
   return <LegacyRoleView data={data} role={role} />;
 }
 
@@ -73,7 +86,9 @@ function LegacyRoleView({ data, role }: { data: RoleViewType; role: RoleId }) {
         >
           {role.toUpperCase()} VIEW
         </p>
-        <h3 className="text-xl font-semibold text-zinc-100 mb-2">{data.title}</h3>
+        <h3 className="text-xl font-semibold text-zinc-100 mb-2">
+          {data.title}
+        </h3>
         <p className="text-sm text-zinc-400 leading-relaxed">{data.summary}</p>
       </div>
 
@@ -93,11 +108,13 @@ function LegacyRoleView({ data, role }: { data: RoleViewType; role: RoleId }) {
             >
               <span
                 className="text-xs font-mono text-zinc-600 shrink-0 mt-0.5 w-6"
-                style={{ color: accent + "80" }}
+                style={{ color: accent + '80' }}
               >
-                {String(i + 1).padStart(2, "0")}
+                {String(i + 1).padStart(2, '0')}
               </span>
-              <span className="text-sm text-zinc-200 leading-relaxed">{point}</span>
+              <span className="text-sm text-zinc-200 leading-relaxed">
+                {point}
+              </span>
             </li>
           ))}
         </ul>
@@ -119,7 +136,7 @@ function LegacyRoleView({ data, role }: { data: RoleViewType; role: RoleId }) {
             >
               <span
                 className="text-zinc-600 shrink-0 mt-0.5"
-                style={{ color: accent + "80" }}
+                style={{ color: accent + '80' }}
               >
                 Q.
               </span>
