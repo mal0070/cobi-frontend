@@ -74,7 +74,7 @@ export default function CodeInputPanel({
 
   return (
     <section className="mb-6">
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden min-h-[296px]">
         <div className="w-full flex items-center justify-between px-4 py-3 border-b border-zinc-800/80">
           <div className="flex items-center gap-2">
             <Code2 className="w-4 h-4 text-zinc-500" />
@@ -181,8 +181,8 @@ export default function CodeInputPanel({
             disabled={status !== "idle"}
             spellCheck={false}
             placeholder="여기에 코드를 붙여넣으세요..."
-            className="w-full px-5 py-4 bg-transparent text-sm text-zinc-200 font-mono leading-relaxed resize-none focus:outline-none disabled:opacity-60 placeholder:text-zinc-700"
-            style={{ fontFamily: '"JetBrains Mono", ui-monospace, monospace', minHeight: "240px" }}
+            className="w-full px-5 py-4 bg-transparent text-sm text-zinc-200 font-mono leading-relaxed resize-none focus:outline-none disabled:opacity-60 placeholder:text-zinc-700 min-h-60"
+            style={{ fontFamily: '"JetBrains Mono", ui-monospace, monospace' }}
           />
         )}
       </div>

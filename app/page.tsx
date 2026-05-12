@@ -115,6 +115,14 @@ export default function HomePage() {
     );
   };
 
+  if (status === "loading") {
+    return (
+      <main className="max-w-7xl mx-auto px-6 py-8 relative">
+        <LoadingView />
+      </main>
+    );
+  }
+
   return (
     <main className="max-w-7xl mx-auto px-6 py-8 relative">
       {status === "idle" && <IdleHero />}
@@ -146,8 +154,6 @@ export default function HomePage() {
           onAnalyze={handleAnalyze}
         />
       )}
-
-      {status === "loading" && <LoadingView />}
 
       {status === "error" && (
         <ErrorState message={error ?? "알 수 없는 오류"} onRetry={handleRetry} />
