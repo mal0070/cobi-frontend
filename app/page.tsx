@@ -1,17 +1,16 @@
 'use client'
 import CodeInputPanel from "@/components/CodeInputPanel";
-import Footer from "@/components/common/Footer";
-import Header from "@/components/common/Header";
 import { IdleActions, IdleHero } from "@/components/views/IdleView";
 import LoadingView from "@/components/views/LoadingView";
-import ResultView, { Tab } from "@/components/views/ResultView";
 import { analyze, AnalyzeError } from "@/lib/api";
 import { detectLanguage } from "@/lib/detectLanguage";
+import { loadLatestResult, saveLatestResult } from "@/lib/latestResult";
 import { SAMPLE_CODE } from "@/lib/mockData";
 import { validateCode } from "@/lib/validateCode";
 import type { AnalysisStatus, AnalyzeResponse, LanguageId, RoleId } from "@/types/api";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 function getAnalysisCacheKey(req: { code: string; language: string; roles: RoleId[] }): string {
   return "cobi_analysis_" + JSON.stringify({ ...req, roles: [...req.roles].sort() });
@@ -29,22 +28,18 @@ function getCachedAnalysis(key: string): AnalyzeResponse | null {
 function setCachedAnalysis(key: string, result: AnalyzeResponse): void {
   try {
     sessionStorage.setItem(key, JSON.stringify(result));
-  } catch {
-    // 스토리지 초과 시 무시
-  }
+  } catch {}
 }
 
-export default function App() {
-  const [code, setCode] = useState(SAMPLE_CODE);
+export default function HomePage() {
+  const router = useRouter();
+
+  const [code, setCode] = useState(() => loadLatestResult()?.code ?? SAMPLE_CODE);
   const [language, setLanguage] = useState<LanguageId>("auto");
   const [autoDetect, setAutoDetect] = useState(true);
   const [selectedRoles, setSelectedRoles] = useState<RoleId[]>(["pm", "designer", "qa", "cs"]);
   const [status, setStatus] = useState<AnalysisStatus>("idle");
-  const [activeTab, setActiveTab] = useState<Tab>("flowchart");
-  const [codeCollapsed, setCodeCollapsed] = useState(false);
-  const [response, setResponse] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [analyzedCode, setAnalyzedCode] = useState(SAMPLE_CODE);
   const [inputError, setInputError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,14 +70,15 @@ export default function App() {
       output_style: "detailed" as const,
     };
 
+    const navigateWithResult = (response: AnalyzeResponse) => {
+      saveLatestResult({ response, code });
+      router.push("/result");
+    };
+
     const cacheKey = getAnalysisCacheKey(req);
     const cached = getCachedAnalysis(cacheKey);
     if (cached) {
-      setAnalyzedCode(code);
-      setResponse(cached);
-      setStatus("success");
-      setActiveTab("flowchart");
-      setCodeCollapsed(true);
+      navigateWithResult(cached);
       return;
     }
 
@@ -91,11 +87,7 @@ export default function App() {
     try {
       const res = await analyze(req);
       setCachedAnalysis(cacheKey, res);
-      setAnalyzedCode(code);
-      setResponse(res);
-      setStatus("success");
-      setActiveTab("flowchart");
-      setCodeCollapsed(true);
+      navigateWithResult(res);
     } catch (e) {
       setStatus("error");
       setError(
@@ -106,80 +98,55 @@ export default function App() {
     }
   };
 
-  const handleReset = () => {
-    setCode(analyzedCode);
+  const handleRetry = () => {
     setStatus("idle");
-    setResponse(null);
     setError(null);
-    setCodeCollapsed(false);
   };
 
   const toggleRole = (id: RoleId) => {
-    setSelectedRoles((prev) => prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]);
+    setSelectedRoles((prev) =>
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+    );
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100" style={{ fontFamily: '"Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif' }}>
-      <div
-        className="fixed inset-0 opacity-[0.04] pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
+    <main className="max-w-7xl mx-auto px-6 py-8 relative">
+      {status === "idle" && <IdleHero />}
+
+      <CodeInputPanel
+        code={code}
+        onCodeChange={setCode}
+        language={language}
+        onLanguageChange={setLanguage}
+        autoDetect={autoDetect}
+        onAutoDetectChange={setAutoDetect}
+        status={status}
+        codeCollapsed={false}
+        onCollapsedChange={() => {}}
       />
 
-      <Header />
+      {inputError && (
+        <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-lg border border-red-900/60 bg-red-950/30 text-sm text-red-300">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+          {inputError}
+        </div>
+      )}
 
-      <main className="max-w-7xl mx-auto px-6 py-8 relative">
-        {status === "idle" && <IdleHero />}
-
-        <CodeInputPanel
+      {status === "idle" && (
+        <IdleActions
           code={code}
-          onCodeChange={setCode}
-          language={language}
-          onLanguageChange={setLanguage}
-          autoDetect={autoDetect}
-          onAutoDetectChange={setAutoDetect}
-          status={status}
-          codeCollapsed={codeCollapsed}
-          onCollapsedChange={setCodeCollapsed}
+          selectedRoles={selectedRoles}
+          onToggleRole={toggleRole}
+          onAnalyze={handleAnalyze}
         />
+      )}
 
-        {inputError && (
-          <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-lg border border-red-900/60 bg-red-950/30 text-sm text-red-300">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
-            {inputError}
-          </div>
-        )}
+      {status === "loading" && <LoadingView />}
 
-        {status === "idle" && (
-          <IdleActions
-            code={code}
-            selectedRoles={selectedRoles}
-            onToggleRole={toggleRole}
-            onAnalyze={handleAnalyze}
-          />
-        )}
-
-        {status === "loading" && <LoadingView />}
-
-        {status === "error" && (
-          <ErrorState message={error ?? "알 수 없는 오류"} onRetry={handleReset} />
-        )}
-
-        {status === "success" && response && (
-          <ResultView
-            response={response}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            onReset={handleReset}
-          />
-        )}
-      </main>
-
-      <Footer />
-    </div>
+      {status === "error" && (
+        <ErrorState message={error ?? "알 수 없는 오류"} onRetry={handleRetry} />
+      )}
+    </main>
   );
 }
 

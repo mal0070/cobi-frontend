@@ -52,7 +52,7 @@ export default function ResultView({ response, activeTab, onTabChange, onReset }
   ];
 
   return (
-    <section className="space-y-5">
+    <section className="flex flex-col flex-1 space-y-5">
       {/* 메타 칩 */}
       <div className="flex items-center gap-2 flex-wrap">
         <Chip>
@@ -122,7 +122,7 @@ export default function ResultView({ response, activeTab, onTabChange, onReset }
       </div>
 
       {/* 탭 콘텐츠 */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-6 min-h-[500px]">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-6 flex-1">
         {activeTab === "flowchart" && (
           <DiagramPanel
             title={visualizations.flowchart.title}
