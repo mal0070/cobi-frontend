@@ -2,7 +2,7 @@
 
 import { detectLanguage } from "@/lib/detectLanguage";
 import type { LanguageId } from "@/types/api";
-import { Check, ChevronDown, Code2, Wand2 } from "lucide-react";
+import { Check, ChevronDown, Code2, RotateCcw, Wand2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const LANGUAGES = [
@@ -30,6 +30,7 @@ interface CodeInputPanelProps {
   status: Status;
   codeCollapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
+  onClear?: () => void;
 }
 
 export default function CodeInputPanel({
@@ -42,6 +43,7 @@ export default function CodeInputPanel({
   status,
   codeCollapsed,
   onCollapsedChange,
+  onClear,
 }: CodeInputPanelProps) {
   const [langOpen, setLangOpen] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
@@ -162,17 +164,29 @@ export default function CodeInputPanel({
             </div>
           </div>
 
-          {(status === "success" || status === "error") && (
-            <button
-              onClick={() => onCollapsedChange(!codeCollapsed)}
-              className="p-1 rounded hover:bg-zinc-800 transition-colors"
-              aria-label={codeCollapsed ? "코드 펼치기" : "코드 접기"}
-            >
-              <ChevronDown
-                className={`w-4 h-4 text-zinc-500 transition-transform ${codeCollapsed ? "" : "rotate-180"}`}
-              />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {onClear && status === "idle" && (
+              <button
+                onClick={onClear}
+                className="p-1 rounded hover:bg-zinc-800 transition-colors flex items-center"
+                aria-label="코드 초기화"
+              >
+                <RotateCcw className="w-4 h-4 text-zinc-500" />
+                <p className="text-sm px-2">코드 초기화</p>
+              </button>
+            )}
+            {(status === "success" || status === "error") && (
+              <button
+                onClick={() => onCollapsedChange(!codeCollapsed)}
+                className="p-1 rounded hover:bg-zinc-800 transition-colors"
+                aria-label={codeCollapsed ? "코드 펼치기" : "코드 접기"}
+              >
+                <ChevronDown
+                  className={`w-4 h-4 text-zinc-500 transition-transform ${codeCollapsed ? "" : "rotate-180"}`}
+                />
+              </button>
+            )}
+          </div>
         </div>
         {!codeCollapsed && (
           <textarea

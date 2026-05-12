@@ -148,6 +148,7 @@ export default function HomePage() {
           status={status}
           codeCollapsed={false}
           onCollapsedChange={() => {}}
+          onClear={() => setCode('')}
         />
 
         {inputError && (
