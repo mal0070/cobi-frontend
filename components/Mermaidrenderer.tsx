@@ -81,7 +81,7 @@ export function MermaidRenderer({ code, id = "diagram" }: MermaidRendererProps) 
   return (
     <div
       ref={containerRef}
-      className="mermaid-container w-full flex items-center justify-center [&_svg]:max-w-full [&_svg]:h-auto"
+      className="mermaid-container w-full flex items-center justify-center [&_svg]:w-auto [&_svg]:h-auto"
       // 위험: mermaid가 생성한 SVG 마크업을 그대로 삽입
       // mermaid는 신뢰 가능한 라이브러리지만, 보안 정책상 dangerouslySetInnerHTML 사용을 알리는 주석
       dangerouslySetInnerHTML={{ __html: svg }}

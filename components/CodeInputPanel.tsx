@@ -73,8 +73,8 @@ export default function CodeInputPanel({
   }, [code, autoDetect, language, onLanguageChange]);
 
   return (
-    <section className="mb-6">
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden min-h-[296px]">
+    <section className="mb-6 shrink-0">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
         <div className="w-full flex items-center justify-between px-4 py-3 border-b border-zinc-800/80">
           <div className="flex items-center gap-2">
             <Code2 className="w-4 h-4 text-zinc-500" />

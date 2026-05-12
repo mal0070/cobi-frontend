@@ -1,19 +1,30 @@
-'use client'
-import CodeInputPanel from "@/components/CodeInputPanel";
-import { IdleActions, IdleHero } from "@/components/views/IdleView";
-import LoadingView from "@/components/views/LoadingView";
-import { analyze, AnalyzeError } from "@/lib/api";
-import { detectLanguage } from "@/lib/detectLanguage";
-import { loadLatestResult, saveLatestResult } from "@/lib/latestResult";
-import { SAMPLE_CODE } from "@/lib/mockData";
-import { validateCode } from "@/lib/validateCode";
-import type { AnalysisStatus, AnalyzeResponse, LanguageId, RoleId } from "@/types/api";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+'use client';
+import CodeInputPanel from '@/components/CodeInputPanel';
+import { IdleActions, IdleHero } from '@/components/views/IdleView';
+import LoadingView from '@/components/views/LoadingView';
+import { analyze, AnalyzeError } from '@/lib/api';
+import { detectLanguage } from '@/lib/detectLanguage';
+import { loadLatestResult, saveLatestResult } from '@/lib/latestResult';
+import { SAMPLE_CODE } from '@/lib/mockData';
+import { validateCode } from '@/lib/validateCode';
+import type {
+  AnalysisStatus,
+  AnalyzeResponse,
+  LanguageId,
+  RoleId,
+} from '@/types/api';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-function getAnalysisCacheKey(req: { code: string; language: string; roles: RoleId[] }): string {
-  return "cobi_analysis_" + JSON.stringify({ ...req, roles: [...req.roles].sort() });
+function getAnalysisCacheKey(req: {
+  code: string;
+  language: string;
+  roles: RoleId[];
+}): string {
+  return (
+    'cobi_analysis_' + JSON.stringify({ ...req, roles: [...req.roles].sort() })
+  );
 }
 
 function getCachedAnalysis(key: string): AnalyzeResponse | null {
@@ -41,10 +52,15 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored) setCode(stored);
   }, []);
-  const [language, setLanguage] = useState<LanguageId>("auto");
+  const [language, setLanguage] = useState<LanguageId>('auto');
   const [autoDetect, setAutoDetect] = useState(true);
-  const [selectedRoles, setSelectedRoles] = useState<RoleId[]>(["pm", "designer", "qa", "cs"]);
-  const [status, setStatus] = useState<AnalysisStatus>("idle");
+  const [selectedRoles, setSelectedRoles] = useState<RoleId[]>([
+    'pm',
+    'designer',
+    'qa',
+    'cs',
+  ]);
+  const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
 
@@ -58,7 +74,7 @@ export default function HomePage() {
     if (!code.trim()) return;
 
     if (selectedRoles.length === 0) {
-      setInputError("직군을 선택해주세요");
+      setInputError('직군을 선택해주세요');
       return;
     }
 
@@ -71,14 +87,14 @@ export default function HomePage() {
 
     const req = {
       code,
-      language: autoDetect ? "auto" : language,
+      language: autoDetect ? 'auto' : language,
       roles: selectedRoles,
-      output_style: "detailed" as const,
+      output_style: 'detailed' as const,
     };
 
     const navigateWithResult = (response: AnalyzeResponse) => {
       saveLatestResult({ response, code });
-      router.push("/result");
+      router.push('/result');
     };
 
     const cacheKey = getAnalysisCacheKey(req);
@@ -88,81 +104,88 @@ export default function HomePage() {
       return;
     }
 
-    setStatus("loading");
+    setStatus('loading');
     setError(null);
     try {
       const res = await analyze(req);
       setCachedAnalysis(cacheKey, res);
       navigateWithResult(res);
     } catch (e) {
-      setStatus("error");
+      setStatus('error');
       setError(
-        e instanceof AnalyzeError ? e.message :
-        e instanceof Error ? e.message :
-        "알 수 없는 오류가 발생했습니다."
+        e instanceof AnalyzeError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : '알 수 없는 오류가 발생했습니다.',
       );
     }
   };
 
   const handleRetry = () => {
-    setStatus("idle");
+    setStatus('idle');
     setError(null);
   };
 
   const toggleRole = (id: RoleId) => {
     setSelectedRoles((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
     );
   };
 
-  if (status === "loading") {
-    return (
-      <main className="max-w-7xl mx-auto px-6 py-8 relative">
-        <LoadingView />
-      </main>
-    );
-  }
-
   return (
-    <main className="max-w-7xl mx-auto px-6 py-8 relative">
-      {status === "idle" && <IdleHero />}
+    <main className="max-w-7xl mx-auto py-8 relative">
+      <div className='w-4xl'>
+        {status === 'idle' && <IdleHero />}
 
-      <CodeInputPanel
-        code={code}
-        onCodeChange={setCode}
-        language={language}
-        onLanguageChange={setLanguage}
-        autoDetect={autoDetect}
-        onAutoDetectChange={setAutoDetect}
-        status={status}
-        codeCollapsed={false}
-        onCollapsedChange={() => {}}
-      />
-
-      {inputError && (
-        <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-lg border border-red-900/60 bg-red-950/30 text-sm text-red-300">
-          <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
-          {inputError}
-        </div>
-      )}
-
-      {status === "idle" && (
-        <IdleActions
+        <CodeInputPanel
           code={code}
-          selectedRoles={selectedRoles}
-          onToggleRole={toggleRole}
-          onAnalyze={handleAnalyze}
+          onCodeChange={setCode}
+          language={language}
+          onLanguageChange={setLanguage}
+          autoDetect={autoDetect}
+          onAutoDetectChange={setAutoDetect}
+          status={status}
+          codeCollapsed={false}
+          onCollapsedChange={() => {}}
         />
-      )}
 
-      {status === "error" && (
-        <ErrorState message={error ?? "알 수 없는 오류"} onRetry={handleRetry} />
-      )}
+        {inputError && (
+          <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-lg border border-red-900/60 bg-red-950/30 text-sm text-red-300">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+            {inputError}
+          </div>
+        )}
+
+        {status === 'idle' && (
+          <IdleActions
+            code={code}
+            selectedRoles={selectedRoles}
+            onToggleRole={toggleRole}
+            onAnalyze={handleAnalyze}
+          />
+        )}
+
+        {status === 'loading' && <LoadingView />}
+
+        {status === 'error' && (
+          <ErrorState
+            message={error ?? '알 수 없는 오류'}
+            onRetry={handleRetry}
+          />
+        )}
+      </div>
     </main>
   );
 }
 
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+function ErrorState({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
   return (
     <section className="py-16">
       <div className="flex flex-col items-center justify-center gap-5 max-w-md mx-auto">
@@ -170,7 +193,9 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
           <AlertTriangle className="w-7 h-7 text-red-400" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-zinc-200 mb-2">분석에 실패했어요</p>
+          <p className="text-sm font-medium text-zinc-200 mb-2">
+            분석에 실패했어요
+          </p>
           <p className="text-xs text-zinc-500 font-mono break-all">{message}</p>
         </div>
         <button

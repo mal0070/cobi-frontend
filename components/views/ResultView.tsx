@@ -122,7 +122,7 @@ export default function ResultView({ response, activeTab, onTabChange, onReset }
       </div>
 
       {/* 탭 콘텐츠 */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-6 flex-1">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-6 min-h-100">
         {activeTab === "flowchart" && (
           <DiagramPanel
             title={visualizations.flowchart.title}
@@ -203,7 +203,7 @@ function DiagramPanel({ title, mermaid, id }: { title: string; mermaid: string; 
   return (
     <div>
       <p className="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-4">{title}</p>
-      <div className="bg-zinc-950/60 rounded-lg p-6 border border-zinc-800/60 min-h-[400px] flex items-center justify-center">
+      <div className="bg-zinc-950/60 rounded-lg p-4 border border-zinc-800/60 flex items-center justify-center">
         <MermaidRenderer code={mermaid} id={id} />
       </div>
     </div>
