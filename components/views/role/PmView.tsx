@@ -1,19 +1,20 @@
-"use client";
+'use client';
 
-import { CopyButton } from "@/components/views/role/shared/CopyButton";
-import { RoleHeader } from "@/components/views/role/shared/RoleHeader";
-import type { LogicIR, RoleView as RoleViewType } from "@/types/api";
+import { CopyButton } from '@/components/views/role/shared/CopyButton';
+import { IssueCommentButton } from '@/components/views/role/shared/IssueCommentButton';
+import { RoleHeader } from '@/components/views/role/shared/RoleHeader';
+import type { LogicIR, RoleView as RoleViewType } from '@/types/api';
 import {
-    AlertTriangle,
-    BarChart3,
-    Check,
-    CircleHelp,
-    HelpCircle,
-    Info,
-    Lightbulb,
-    X,
-} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+  AlertTriangle,
+  BarChart3,
+  Check,
+  CircleHelp,
+  HelpCircle,
+  Info,
+  Lightbulb,
+  X,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface PmViewProps {
   data: RoleViewType;
@@ -26,14 +27,12 @@ interface PmViewProps {
   storageKey?: string;
 }
 
-const PM_ACCENT = "rgb(96 165 250)"; // blue-400
+const PM_ACCENT = 'rgb(96 165 250)'; // blue-400
 
-type Verification = "match" | "check" | "mismatch";
+type Verification = 'match' | 'check' | 'mismatch';
 
 interface VerificationState {
-  /** 검증 상태 */
   status?: Verification;
-  /** PM이 작성한 메모 (옵션, 향후 확장용) */
   note?: string;
 }
 
@@ -43,7 +42,7 @@ interface VerificationState {
 function loadVerificationsFromSession(
   key: string,
 ): Record<string, VerificationState> {
-  if (typeof window === "undefined") return {};
+  if (typeof window === 'undefined') return {};
   try {
     const raw = sessionStorage.getItem(key);
     return raw ? (JSON.parse(raw) as Record<string, VerificationState>) : {};
@@ -54,28 +53,14 @@ function loadVerificationsFromSession(
 
 /**
  * PM View - 제품 매니저를 위한 정책 매트릭스 + 검증 도구
- *
- * 협업 상황:
- * - PM이 짠 정책이 코드에 제대로 반영됐는지 검증
- * - 누락된 케이스를 발견하면 개발자에게 다시 요청
- * - 슬랙/지라에 바로 붙여넣을 이슈 코멘트 생성
- *
- * 기능:
- * - logic_ir.branches → 정책 매트릭스 테이블
- * - 행별 검증 상태: 일치 / 확인필요 / 불일치 (sessionStorage 영속)
- * - 행별 이슈 코멘트 마크다운 복사
- * - edge_cases / uncertainties → 누락 케이스 패널
- * - 전체 검증 리포트 마크다운 복사
  */
-export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
+export function PmView({ data, logicIR, storageKey = 'default' }: PmViewProps) {
   const sessionKey = `cobi_pm_matrix_${storageKey}`;
 
-  // lazy initializer로 초기 상태 로드 (effect에서 setState 호출 없음)
   const [verifications, setVerifications] = useState<
     Record<string, VerificationState>
   >(() => loadVerificationsFromSession(sessionKey));
 
-  // 저장 (외부 시스템 동기화)
   useEffect(() => {
     try {
       sessionStorage.setItem(sessionKey, JSON.stringify(verifications));
@@ -87,7 +72,6 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
   const setStatus = (rowId: string, status: Verification) => {
     setVerifications((prev) => {
       const current = prev[rowId];
-      // 같은 버튼 다시 누르면 미검증으로 복귀
       if (current?.status === status) {
         const next = { ...prev };
         delete next[rowId];
@@ -105,9 +89,9 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
       check = 0,
       mismatch = 0;
     Object.values(verifications).forEach((v) => {
-      if (v.status === "match") match++;
-      else if (v.status === "check") check++;
-      else if (v.status === "mismatch") mismatch++;
+      if (v.status === 'match') match++;
+      else if (v.status === 'check') check++;
+      else if (v.status === 'mismatch') mismatch++;
     });
     const total = logicIR.branches.length;
     const done = match + check + mismatch;
@@ -123,33 +107,35 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
     const v = verifications[`row-${rowIndex}`];
     const status = v?.status;
     const statusLabel =
-      status === "match"
-        ? "✅ 정책과 일치"
-        : status === "check"
-          ? "⚠️ 확인 필요"
-          : status === "mismatch"
-            ? "❌ 정책 불일치"
-            : "☐ 미검증";
+      status === 'match'
+        ? '✅ 정책과 일치'
+        : status === 'check'
+          ? '⚠️ 확인 필요'
+          : status === 'mismatch'
+            ? '❌ 정책 불일치'
+            : '☐ 미검증';
 
     const lines: string[] = [];
     lines.push(`### 정책 검증 - 분기 ${rowIndex + 1}`);
-    lines.push("");
+    lines.push('');
     lines.push(`**상태**: ${statusLabel}`);
-    lines.push("");
-    lines.push(`- **조건 변수**: ${branch.condition_var || "-"}`);
+    lines.push('');
+    lines.push(`- **조건 변수**: ${branch.condition_var || '-'}`);
     lines.push(`- **조건**: \`${branch.condition}\``);
     lines.push(`- **결과**: ${branch.result}`);
     lines.push(`- **의미**: ${branch.plain_meaning}`);
 
-    if (status === "mismatch") {
-      lines.push("");
-      lines.push("> 💬 이 분기가 의도한 정책과 다릅니다. 개발자 확인 요청드립니다.");
-    } else if (status === "check") {
-      lines.push("");
-      lines.push("> 💬 이 분기의 정책 의도를 확인이 필요합니다.");
+    if (status === 'mismatch') {
+      lines.push('');
+      lines.push(
+        '> 💬 이 분기가 의도한 정책과 다릅니다. 개발자 확인 요청드립니다.',
+      );
+    } else if (status === 'check') {
+      lines.push('');
+      lines.push('> 💬 이 분기의 정책 의도를 확인이 필요합니다.');
     }
 
-    return lines.join("\n");
+    return lines.join('\n');
   };
 
   // ============================================================
@@ -158,83 +144,82 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
   const fullReport = useMemo(() => {
     const lines: string[] = [];
     lines.push(`# ${data.title}`);
-    lines.push("");
+    lines.push('');
     lines.push(`> ${data.summary}`);
-    lines.push("");
-    lines.push("## 검증 진행률");
-    lines.push("");
+    lines.push('');
+    lines.push('## 검증 진행률');
+    lines.push('');
     lines.push(`- 전체 분기: **${stats.total}**`);
     lines.push(`- ✅ 일치: ${stats.match}`);
     lines.push(`- ⚠️ 확인 필요: ${stats.check}`);
     lines.push(`- ❌ 불일치: ${stats.mismatch}`);
     lines.push(`- ☐ 미검증: ${stats.pending}`);
-    lines.push("");
+    lines.push('');
 
     if (logicIR.branches.length > 0) {
-      lines.push("## 정책 매트릭스");
-      lines.push("");
-      lines.push("| # | 조건 변수 | 조건 | 결과 | 검증 |");
-      lines.push("|---|---|---|---|---|");
+      lines.push('## 정책 매트릭스');
+      lines.push('');
+      lines.push('| # | 조건 변수 | 조건 | 결과 | 검증 |');
+      lines.push('|---|---|---|---|---|');
       logicIR.branches.forEach((b, i) => {
         const status = verifications[`row-${i}`]?.status;
         const mark =
-          status === "match"
-            ? "✅"
-            : status === "check"
-              ? "⚠️"
-              : status === "mismatch"
-                ? "❌"
-                : "☐";
+          status === 'match'
+            ? '✅'
+            : status === 'check'
+              ? '⚠️'
+              : status === 'mismatch'
+                ? '❌'
+                : '☐';
         lines.push(
-          `| ${i + 1} | ${escapePipe(b.condition_var || "-")} | \`${escapePipe(b.condition)}\` | ${escapePipe(b.result)} | ${mark} |`,
+          `| ${i + 1} | ${escapePipe(b.condition_var || '-')} | \`${escapePipe(b.condition)}\` | ${escapePipe(b.result)} | ${mark} |`,
         );
       });
-      lines.push("");
+      lines.push('');
     }
 
-    // 불일치 항목 별도 강조
     const mismatched = logicIR.branches
       .map((b, i) => ({ b, i, status: verifications[`row-${i}`]?.status }))
-      .filter((x) => x.status === "mismatch");
+      .filter((x) => x.status === 'mismatch');
 
     if (mismatched.length > 0) {
-      lines.push("## ❌ 정책 불일치 항목 (개발자 확인 필요)");
-      lines.push("");
+      lines.push('## ❌ 정책 불일치 항목 (개발자 확인 필요)');
+      lines.push('');
       mismatched.forEach(({ b, i }) => {
         lines.push(`### 분기 ${i + 1}: ${b.plain_meaning}`);
         lines.push(`- 조건: \`${b.condition}\``);
         lines.push(`- 결과: ${b.result}`);
-        lines.push("");
+        lines.push('');
       });
     }
 
     if (logicIR.edge_cases.length > 0) {
-      lines.push("## 누락 가능 케이스");
-      lines.push("");
+      lines.push('## 누락 가능 케이스');
+      lines.push('');
       logicIR.edge_cases.forEach((e) => {
         lines.push(`- [ ] ${e}`);
       });
-      lines.push("");
+      lines.push('');
     }
 
     if (logicIR.uncertainties.length > 0) {
-      lines.push("## 명확화 필요 항목");
-      lines.push("");
+      lines.push('## 명확화 필요 항목');
+      lines.push('');
       logicIR.uncertainties.forEach((u) => {
         lines.push(`- [ ] ${u}`);
       });
-      lines.push("");
+      lines.push('');
     }
 
     if (data.questions_to_confirm.length > 0) {
-      lines.push("## 개발자에게 확인할 질문");
-      lines.push("");
+      lines.push('## 개발자에게 확인할 질문');
+      lines.push('');
       data.questions_to_confirm.forEach((q) => {
         lines.push(`- [ ] ${q}`);
       });
     }
 
-    return lines.join("\n");
+    return lines.join('\n');
   }, [data, logicIR, verifications, stats]);
 
   // ============================================================
@@ -314,10 +299,17 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <BarChart3 className="w-4 h-4" style={{ color: PM_ACCENT }} />
-            <h4 className="text-sm font-semibold text-zinc-200">정책 매트릭스</h4>
+            <h4 className="text-sm font-semibold text-zinc-200">
+              정책 매트릭스
+            </h4>
             <span className="text-[10px] font-mono text-zinc-600">
               {logicIR.branches.length} BRANCHES
             </span>
+            {stats.mismatch > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-300 border border-red-500/30">
+                ❌ 불일치 {stats.mismatch}건 - 개발자 확인 필요
+              </span>
+            )}
           </div>
 
           <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 overflow-hidden">
@@ -325,6 +317,8 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-900/60">
+                    {/* 좌측 강조 바 영역 */}
+                    <th className="w-1 p-0" aria-hidden="true" />
                     <th className="px-3 py-2.5 text-left text-[10px] font-mono uppercase tracking-wider text-zinc-500 w-10">
                       #
                     </th>
@@ -337,8 +331,8 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
                     <th className="px-3 py-2.5 text-left text-[10px] font-mono uppercase tracking-wider text-zinc-500">
                       결과
                     </th>
-                    <th className="px-3 py-2.5 text-right text-[10px] font-mono uppercase tracking-wider text-zinc-500 w-44">
-                      검증
+                    <th className="px-3 py-2.5 text-right text-[10px] font-mono uppercase tracking-wider text-zinc-500 w-56">
+                      검증 & 이슈
                     </th>
                   </tr>
                 </thead>
@@ -393,9 +387,9 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
               >
                 <span
                   className="text-xs font-mono shrink-0 mt-0.5 w-6"
-                  style={{ color: PM_ACCENT + "80" }}
+                  style={{ color: PM_ACCENT + '80' }}
                 >
-                  {String(i + 1).padStart(2, "0")}
+                  {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className="text-sm text-zinc-200 leading-relaxed">
                   {point}
@@ -436,14 +430,12 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
         </div>
       )}
 
-      {/* 명확화 필요 항목 (uncertainties) */}
+      {/* 명확화 필요 항목 */}
       {logicIR.uncertainties.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
             <CircleHelp className="w-4 h-4 text-red-400" />
-            <h4 className="text-sm font-semibold text-zinc-200">
-              명확화 필요
-            </h4>
+            <h4 className="text-sm font-semibold text-zinc-200">명확화 필요</h4>
             <span className="text-[10px] text-red-400">· 개발자 확인 요청</span>
             <span className="text-[10px] font-mono text-zinc-600 ml-auto">
               {logicIR.uncertainties.length} ITEMS
@@ -484,7 +476,7 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
               >
                 <span
                   className="shrink-0 mt-0.5"
-                  style={{ color: PM_ACCENT + "80" }}
+                  style={{ color: PM_ACCENT + '80' }}
                 >
                   Q.
                 </span>
@@ -507,7 +499,7 @@ export function PmView({ data, logicIR, storageKey = "default" }: PmViewProps) {
 
 interface MatrixRowProps {
   index: number;
-  branch: LogicIR["branches"][number];
+  branch: LogicIR['branches'][number];
   status?: Verification;
   onChangeStatus: (status: Verification) => void;
   rowMarkdown: string;
@@ -520,25 +512,56 @@ function MatrixRow({
   onChangeStatus,
   rowMarkdown,
 }: MatrixRowProps) {
+  // 행 톤 - 상태에 따라
   const rowBg =
-    status === "match"
-      ? "bg-blue-950/10"
-      : status === "check"
-        ? "bg-amber-950/10"
-        : status === "mismatch"
-          ? "bg-red-950/10"
-          : "";
+    status === 'match'
+      ? 'bg-blue-950/10'
+      : status === 'check'
+        ? 'bg-amber-950/10'
+        : status === 'mismatch'
+          ? 'bg-red-950/20'
+          : '';
+
+  // 좌측 강조 바 - 불일치만 빨간 컬러로, 확인필요는 앰버, 일치는 파랑, 미검증은 투명
+  const leftBarColor =
+    status === 'match'
+      ? 'bg-blue-500/60'
+      : status === 'check'
+        ? 'bg-amber-500/70'
+        : status === 'mismatch'
+          ? 'bg-red-500'
+          : 'bg-transparent';
+
+  // 불일치 행은 좌측 강조 바를 더 두껍게
+  const leftBarWidth = status === 'mismatch' ? 'w-1' : 'w-0.5';
 
   return (
-    <tr className={`border-b border-zinc-800/60 last:border-0 ${rowBg}`}>
+    <tr
+      className={`border-b border-zinc-800/60 last:border-0 transition-colors ${rowBg}`}
+    >
+      {/* 좌측 강조 바 */}
+      <td className="p-0 relative">
+        <div
+          className={`absolute left-0 top-0 bottom-0 ${leftBarWidth} ${leftBarColor} transition-all`}
+          aria-hidden="true"
+        />
+      </td>
+
       <td className="px-3 py-3 text-xs font-mono text-zinc-500 align-top">
-        {String(index + 1).padStart(2, "0")}
+        <div className="flex items-center gap-1.5">
+          {status === 'mismatch' && (
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"
+              aria-label="시급 액션"
+              title="불일치 - 개발자 확인 필요"
+            />
+          )}
+          {String(index + 1).padStart(2, '0')}
+        </div>
       </td>
       <td className="px-3 py-3 align-top">
         <span className="text-sm text-zinc-200">
-          {branch.condition_var || (
-            <span className="text-zinc-600">-</span>
-          )}
+          {branch.condition_var || <span className="text-zinc-600">-</span>}
         </span>
       </td>
       <td className="px-3 py-3 align-top">
@@ -555,29 +578,36 @@ function MatrixRow({
         )}
       </td>
       <td className="px-3 py-3 align-top">
-        <div className="flex items-center gap-1 justify-end">
-          <VerifyButton
-            active={status === "match"}
-            onClick={() => onChangeStatus("match")}
-            color="blue"
-            icon={<Check className="w-3.5 h-3.5" />}
-            label="일치"
+        <div className="flex flex-col gap-2 items-end">
+          {/* 검증 상태 버튼 그룹 */}
+          <div className="flex items-center gap-1">
+            <VerifyButton
+              active={status === 'match'}
+              onClick={() => onChangeStatus('match')}
+              color="blue"
+              icon={<Check className="w-3.5 h-3.5" />}
+              label="일치"
+            />
+            <VerifyButton
+              active={status === 'check'}
+              onClick={() => onChangeStatus('check')}
+              color="amber"
+              icon={<AlertTriangle className="w-3.5 h-3.5" />}
+              label="확인"
+            />
+            <VerifyButton
+              active={status === 'mismatch'}
+              onClick={() => onChangeStatus('mismatch')}
+              color="red"
+              icon={<X className="w-3.5 h-3.5" />}
+              label="불일치"
+            />
+          </div>
+          {/* 이슈 만들기 버튼 - 검증 상태에 따라 강조도 */}
+          <IssueCommentButton
+            text={rowMarkdown}
+            variant={status === 'mismatch' ? 'highlight' : 'default'}
           />
-          <VerifyButton
-            active={status === "check"}
-            onClick={() => onChangeStatus("check")}
-            color="amber"
-            icon={<AlertTriangle className="w-3.5 h-3.5" />}
-            label="확인"
-          />
-          <VerifyButton
-            active={status === "mismatch"}
-            onClick={() => onChangeStatus("mismatch")}
-            color="red"
-            icon={<X className="w-3.5 h-3.5" />}
-            label="불일치"
-          />
-          <CopyButton text={rowMarkdown} accent="rgb(96 165 250)" />
         </div>
       </td>
     </tr>
@@ -587,7 +617,7 @@ function MatrixRow({
 interface VerifyButtonProps {
   active: boolean;
   onClick: () => void;
-  color: "blue" | "amber" | "red";
+  color: 'blue' | 'amber' | 'red';
   icon: React.ReactNode;
   label: string;
 }
@@ -601,16 +631,16 @@ function VerifyButton({
 }: VerifyButtonProps) {
   const colorMap = {
     blue: {
-      active: "bg-blue-500/20 border-blue-500/60 text-blue-300",
-      idle: "border-zinc-800 text-zinc-600 hover:border-blue-700 hover:text-blue-400",
+      active: 'bg-blue-500/20 border-blue-500/60 text-blue-300',
+      idle: 'border-zinc-800 text-zinc-600 hover:border-blue-700 hover:text-blue-400',
     },
     amber: {
-      active: "bg-amber-500/20 border-amber-500/60 text-amber-300",
-      idle: "border-zinc-800 text-zinc-600 hover:border-amber-700 hover:text-amber-400",
+      active: 'bg-amber-500/20 border-amber-500/60 text-amber-300',
+      idle: 'border-zinc-800 text-zinc-600 hover:border-amber-700 hover:text-amber-400',
     },
     red: {
-      active: "bg-red-500/20 border-red-500/60 text-red-300",
-      idle: "border-zinc-800 text-zinc-600 hover:border-red-700 hover:text-red-400",
+      active: 'bg-red-500/20 border-red-500/60 text-red-300',
+      idle: 'border-zinc-800 text-zinc-600 hover:border-red-700 hover:text-red-400',
     },
   };
 
@@ -632,7 +662,6 @@ function VerifyButton({
 // 유틸
 // ============================================================
 
-/** 마크다운 테이블 셀에 들어가는 파이프 문자 이스케이프 */
 function escapePipe(text: string): string {
-  return text.replace(/\|/g, "\\|");
+  return text.replace(/\|/g, '\\|');
 }
