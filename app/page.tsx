@@ -11,6 +11,27 @@ import type { AnalysisStatus, AnalyzeResponse, LanguageId, RoleId } from "@/type
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
+function getAnalysisCacheKey(req: { code: string; language: string; roles: RoleId[] }): string {
+  return "cobi_analysis_" + JSON.stringify({ ...req, roles: [...req.roles].sort() });
+}
+
+function getCachedAnalysis(key: string): AnalyzeResponse | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as AnalyzeResponse) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedAnalysis(key: string, result: AnalyzeResponse): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(result));
+  } catch {
+    // 스토리지 초과 시 무시
+  }
+}
+
 export default function App() {
   const [code, setCode] = useState(SAMPLE_CODE);
   const [language, setLanguage] = useState<LanguageId>("auto");
@@ -24,15 +45,29 @@ export default function App() {
 
   const handleAnalyze = async () => {
     if (!code.trim() || selectedRoles.length === 0) return;
+
+    const req = {
+      code,
+      language: autoDetect ? "auto" : language,
+      roles: selectedRoles,
+      output_style: "detailed" as const,
+    };
+
+    const cacheKey = getAnalysisCacheKey(req);
+    const cached = getCachedAnalysis(cacheKey);
+    if (cached) {
+      setResponse(cached);
+      setStatus("success");
+      setActiveTab("flowchart");
+      setCodeCollapsed(true);
+      return;
+    }
+
     setStatus("loading");
     setError(null);
     try {
-      const res = await analyze({
-        code,
-        language: autoDetect ? "auto" : language,
-        roles: selectedRoles,
-        output_style: "detailed",
-      });
+      const res = await analyze(req);
+      setCachedAnalysis(cacheKey, res);
       setResponse(res);
       setStatus("success");
       setActiveTab("flowchart");
