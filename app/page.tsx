@@ -42,6 +42,7 @@ export default function App() {
   const [codeCollapsed, setCodeCollapsed] = useState(false);
   const [response, setResponse] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [analyzedCode, setAnalyzedCode] = useState(SAMPLE_CODE);
 
   const handleAnalyze = async () => {
     if (!code.trim() || selectedRoles.length === 0) return;
@@ -56,6 +57,7 @@ export default function App() {
     const cacheKey = getAnalysisCacheKey(req);
     const cached = getCachedAnalysis(cacheKey);
     if (cached) {
+      setAnalyzedCode(code);
       setResponse(cached);
       setStatus("success");
       setActiveTab("flowchart");
@@ -68,6 +70,7 @@ export default function App() {
     try {
       const res = await analyze(req);
       setCachedAnalysis(cacheKey, res);
+      setAnalyzedCode(code);
       setResponse(res);
       setStatus("success");
       setActiveTab("flowchart");
@@ -83,6 +86,7 @@ export default function App() {
   };
 
   const handleReset = () => {
+    setCode(analyzedCode);
     setStatus("idle");
     setResponse(null);
     setError(null);

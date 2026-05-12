@@ -53,37 +53,28 @@ export default function ResultView({ response, activeTab, onTabChange, onReset }
 
   return (
     <section className="space-y-5">
-      {/* 메타 칩 + 리셋 */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Chip>
-            <FileCode className="w-3 h-3 text-zinc-500" />
-            <span className="text-zinc-500">lang</span>
-            <span className="text-zinc-200">{detected_language}</span>
-          </Chip>
-          <Chip>
-            <GitBranch className="w-3 h-3 text-zinc-500" />
-            <span className="text-zinc-500">branches</span>
-            <span className="text-zinc-200">{logic_ir.branches.length}</span>
-          </Chip>
-          <Chip>
-            <span className="text-zinc-500">inputs</span>
-            <span className="text-zinc-200">{logic_ir.inputs.length}</span>
-          </Chip>
-          <div className={`px-3 py-1.5 rounded-md border text-xs font-mono flex items-center gap-1.5 ${confidenceInfo.bg}`}>
-            <confidenceInfo.Icon className={`w-3.5 h-3.5 ${confidenceInfo.color}`} />
-            <span className={confidenceInfo.color}>
-              confidence: {(confidence * 100).toFixed(0)}%
-            </span>
-          </div>
+      {/* 메타 칩 */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Chip>
+          <FileCode className="w-3 h-3 text-zinc-500" />
+          <span className="text-zinc-500">lang</span>
+          <span className="text-zinc-200">{detected_language}</span>
+        </Chip>
+        <Chip>
+          <GitBranch className="w-3 h-3 text-zinc-500" />
+          <span className="text-zinc-500">branches</span>
+          <span className="text-zinc-200">{logic_ir.branches.length}</span>
+        </Chip>
+        <Chip>
+          <span className="text-zinc-500">inputs</span>
+          <span className="text-zinc-200">{logic_ir.inputs.length}</span>
+        </Chip>
+        <div className={`px-3 py-1.5 rounded-md border text-xs font-mono flex items-center gap-1.5 ${confidenceInfo.bg}`}>
+          <confidenceInfo.Icon className={`w-3.5 h-3.5 ${confidenceInfo.color}`} />
+          <span className={confidenceInfo.color}>
+            confidence: {(confidence * 100).toFixed(0)}%
+          </span>
         </div>
-        <button
-          onClick={onReset}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900 text-xs text-zinc-400 transition-colors"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          새로 분석
-        </button>
       </div>
 
       {/* 경고 패널 (접이식) */}
@@ -153,6 +144,17 @@ export default function ResultView({ response, activeTab, onTabChange, onReset }
             <RoleView key={role} data={role_views[role]!} role={role} />
           ) : null
         )}
+      </div>
+
+      {/* 새로 분석 버튼 */}
+      <div className="flex justify-center pt-4 pb-2">
+        <button
+          onClick={onReset}
+          className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900 text-sm font-medium text-zinc-300 hover:text-zinc-100 transition-all"
+        >
+          <RefreshCw className="w-4 h-4" />
+          새로 분석
+        </button>
       </div>
     </section>
   );
