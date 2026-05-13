@@ -63,7 +63,7 @@ npm run start
 - **Endpoint**: `POST /api/analyze`
 - **CORS**: 백엔드에 허용 설정 포함
 
-백엔드 스펙은 [CoBi Backend README](../README.md)를 참고하세요.
+백엔드 스펙은 [CoBi Backend README](https://github.com/suubinahn/CoBi-backend/blob/main/README.md)를 참고하세요.
 
 ---
 
