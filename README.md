@@ -218,7 +218,6 @@ export type RoleId = 'pm' | 'designer' | 'qa' | 'cs';
 
 - Mermaid는 클라이언트 전용이므로 `MermaidRenderer`는 반드시 `"use client"`로 동작합니다.
 - `dangerouslySetInnerHTML`은 Mermaid가 생성한 신뢰 가능한 SVG에만 사용됩니다.
-- 백엔드 다운 / 개발 환경 부재 시 `lib/mockData.ts`의 `MOCK_RESPONSE`로 화면을 확인할 수 있습니다.
 - 디자인 톤: 다크 테마 (zinc 계열), 직군별 액센트 컬러 (PM=blue, Designer=pink, QA=emerald, CS=orange).
 
 ---
