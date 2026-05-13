@@ -95,7 +95,6 @@ cobi-frontend/
 │  ├─ detectLanguage.ts     # 키워드 휴리스틱 기반 언어 감지
 │  ├─ validateCode.ts       # 괄호 매칭 / Python 들여쓰기 검증
 │  ├─ latestResult.ts       # 최근 분석 결과 영속화
-│  ├─ mockData.ts           # 백엔드 미연동 시 사용할 fixture
 │  └─ utils.ts              # cn() 등 공용 유틸
 │
 ├─ types/
