@@ -5,7 +5,6 @@ import LoadingView from '@/components/views/LoadingView';
 import { analyze, AnalyzeError } from '@/lib/api';
 import { detectLanguage } from '@/lib/detectLanguage';
 import { loadLatestResult, saveLatestResult } from '@/lib/latestResult';
-import { SAMPLE_CODE } from '@/lib/mockData';
 import { validateCode } from '@/lib/validateCode';
 import type {
   AnalysisStatus,
@@ -71,7 +70,7 @@ function setCachedAnalysis(key: string, result: AnalyzeResponse): void {
 export default function HomePage() {
   const router = useRouter();
 
-  const [code, setCode] = useState(SAMPLE_CODE);
+  const [code, setCode] = useState('');
 
   useEffect(() => {
     const stored = loadLatestResult()?.code;
